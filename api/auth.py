@@ -19,9 +19,8 @@ class Auth:
         auth_url = self.api_base._build_request_path(self.auth_path, network)
         logger.info(f"Logging in via {auth_url}")
         response = await self.api_base.api_client.post(
-            str(auth_url),
+            auth_url,
             data=auth_data.model_dump(),
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         response.raise_for_status()
         profile = SecretProfile(**response.json())

@@ -1,3 +1,4 @@
+from pickletools import string1
 from httpx import AsyncClient
 from loguru import logger
 from typing import Optional, Dict, Any
@@ -6,7 +7,6 @@ from pathlib import PurePosixPath
 
 
 class APIBase:
-    
     def __init__(self, config: Dict[str, Any], api_client: AsyncClient):
         """
         Initialize the mixin with configuration and API client.
@@ -24,8 +24,8 @@ class APIBase:
         """Get the default network from config with trailing slashes removed."""
         return self.config["default_network"].strip("/")
     
-    def _build_request_path(self, endpoint: str, network: Optional[str] = None) -> PurePosixPath:
+    def _build_request_path(self, endpoint: str, network: Optional[str] = None) -> str:
         """Build a clean, normalized URL path."""
         network = (network or self.default_network).strip("/")
         endpoint = endpoint.strip("/")
-        return PurePosixPath(network, endpoint)
+        return str(PurePosixPath(network, endpoint))
