@@ -1,40 +1,25 @@
-from httpx import AsyncClient
 from loguru import logger
-from pydantic import SecretStr
 from typing import Optional
 from functools import cached_property
-from pathlib import PurePosixPath
 from src.data_models.profile_model import Profile, SecretProfile
 from src.data_models.auth_data import AuthData
+from src.api.api_base import APIBase
 from src.utils.keyring import KeyringManager
 
 class Auth:
-    def __init__(self, config: dict, api_client: AsyncClient, keyring_manager: KeyringManager):
-        self.config = config
-        logger.debug(f"Auth initialized with config: {config}")
-        self.api_client = api_client
+    def __init__(self, api_base: APIBase, keyring_manager: KeyringManager):
+        self.api_base = api_base
         self.keyring_manager = keyring_manager
 
     @cached_property
-    def default_network(self) -> str:
-        return self.config["default_network"].strip("/")
-
-    @cached_property
     def auth_path(self) -> str:
-        return self.config["auth_path"].strip("/")
-
-    def _build_auth_url(self, network: Optional[str] = None) -> str:
-        """Build a clean, normalized auth URL path."""
-        network = (network or self.default_network).strip("/")
-        full_path = PurePosixPath('/') / network / self.auth_path
-        logger.debug(f"Built auth URL path: {full_path}")
-        return str(full_path)
+        return self.api_base.config["auth_path"].strip("/")
 
     async def login(self, auth_data: AuthData, network: Optional[str] = None) -> dict:
-        auth_url = self._build_auth_url(network)
+        auth_url = self.api_base._build_request_path(self.auth_path, network)
         logger.info(f"Logging in via {auth_url}")
-        response = await self.api_client.post(
-            auth_url,
+        response = await self.api_base.api_client.post(
+            str(auth_url),
             data=auth_data.model_dump(),
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
