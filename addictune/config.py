@@ -10,6 +10,15 @@ NETWORKS: dict[str, str] = {
     "zenradio": "ZenRadio",
 }
 
+LISTEN_DOMAINS: dict[str, str] = {
+    "di": "di.fm",
+    "radiotunes": "radiotunes.com",
+    "rockradio": "rockradio.com",
+    "jazzradio": "jazzradio.com",
+    "classicalradio": "classicalradio.com",
+    "zenradio": "zenradio.com",
+}
+
 
 class AddictuneSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -20,10 +29,10 @@ class AddictuneSettings(BaseSettings):
     )
 
     api_base: str = "https://api.audioaddict.com/v1"
-    listen_base: str = "https://listen.{network}"
     network: str = "di"
     timeout: float = 30.0
     networks: dict[str, str] = Field(default_factory=lambda: dict(NETWORKS))
+    listen_domains: dict[str, str] = Field(default_factory=lambda: dict(LISTEN_DOMAINS))
 
     @computed_field
     @property
@@ -33,4 +42,5 @@ class AddictuneSettings(BaseSettings):
     @computed_field
     @property
     def resolved_listen_base(self) -> str:
-        return self.listen_base.format(network=self.network)
+        domain = self.listen_domains.get(self.network, f"{self.network}.com")
+        return f"http://prem2.{domain}:80"

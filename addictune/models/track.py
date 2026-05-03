@@ -1,19 +1,8 @@
 from __future__ import annotations
 
-from enum import StrEnum
-
 from pydantic import BaseModel, model_validator
 
 from .common import ContentAsset, ImageSet, Votes
-
-
-class StreamQuality(StrEnum):
-    """Quality tiers for live stream PLS endpoints."""
-
-    PUBLIC = "public3"
-    LOW = "premium_medium"
-    MEDIUM = "premium"
-    HIGH = "premium_high"
 
 
 class Artist(BaseModel):

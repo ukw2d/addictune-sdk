@@ -67,6 +67,16 @@ async def get_currently_playing(client: AddictuneClient) -> None:
     assert now[0].track
 
 
+# ── Stream URL ───────────────────────────────────────────────────────
+
+
+async def get_stream_url(client: AddictuneClient) -> None:
+    url = client.channels.get_stream_url("trance", client.listen_key)
+    assert url.startswith("http://"), f"unexpected url: {url}"
+    assert "trance" in url, f"channel key missing from url: {url}"
+    assert client.listen_key in url, f"listen key missing from url: {url}"
+
+
 # ── Mutations (with rollback) ─────────────────────────────────────────
 
 
@@ -132,6 +142,7 @@ async def main() -> None:
             ("get_by_id", get_by_id),
             ("get_track_history", get_track_history),
             ("get_currently_playing", get_currently_playing),
+            ("get_stream_url", get_stream_url),
             ("add_remove_favorite", add_remove_favorite),
             ("add_listen_history", add_listen_history),
         ]

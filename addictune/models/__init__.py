@@ -17,7 +17,6 @@ from .track import (
     CurrentAudioQuality,
     LikedTrack,
     SkipEvent,
-    StreamQuality,
     Track,
 )
 
@@ -33,7 +32,6 @@ __all__ = [
     "CurrentAudioQuality",
     "LikedTrack",
     "SkipEvent",
-    "StreamQuality",
     "ImageSet",
     "LikedChannelID",
     "ListenHistoryEntry",

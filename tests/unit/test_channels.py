@@ -14,7 +14,7 @@ from addictune.models.channel import (
     NowPlaying,
     TrackHistoryEntry,
 )
-from addictune.models.track import ChannelTracklist, StreamQuality
+from addictune.models.track import ChannelTracklist
 from tests.conftest import make_response
 
 # ── get_all ──────────────────────────────────────────────────────────
@@ -478,68 +478,11 @@ async def test_get_favorite_handles_list_response(mocker):
 # ── get_stream_url ────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
-async def test_get_stream_url_returns_first_stream_url(mocker):
-    pls_content = (
-        "[playlist]\n"
-        "NumberOfEntries=2\n"
-        "File1=http://prem2.di.fm/trance_hi?abc123\n"
-        "Title1=DI.FM - Trance\n"
-        "File2=http://prem4.di.fm/trance_hi?abc123\n"
-        "Title2=DI.FM - Trance\n"
-    )
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, text=pls_content)
-
-    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
-    result = await api.get_stream_url("trance", listen_key="abc123")
-
-    assert result == "http://prem2.di.fm/trance_hi?abc123"
-    mock_client.get.assert_called_once_with(
-        "http://listen.di.fm/premium_high/trance.pls",
-        params={"listen_key": "abc123"},
-    )
+def test_get_stream_url_constructs_url(mocker):
+    api = ChannelsAPI(mocker.AsyncMock(), network="di", listen_base="http://prem2.di.fm:80")
+    assert api.get_stream_url("trance", "abc123") == "http://prem2.di.fm:80/trance?abc123"
 
 
-@pytest.mark.asyncio
-async def test_get_stream_url_with_custom_quality(mocker):
-    pls_content = "File1=http://prem2.di.fm/trance_med?abc123\n"
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, text=pls_content)
-
-    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
-    result = await api.get_stream_url(
-        "trance", listen_key="abc123", quality=StreamQuality.MEDIUM
-    )
-
-    assert result == "http://prem2.di.fm/trance_med?abc123"
-    call_url = mock_client.get.call_args[0][0]
-    assert "/premium/" in call_url
-
-
-@pytest.mark.asyncio
-async def test_get_stream_url_raises_on_empty_pls(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(
-        200, text="[playlist]\nNumberOfEntries=0\n"
-    )
-
-    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
-    with pytest.raises(ValueError, match="No stream URLs found"):
-        await api.get_stream_url("trance", listen_key="abc123")
-
-
-@pytest.mark.asyncio
-async def test_get_stream_url_uses_listen_base_from_config(mocker):
-    pls_content = "File1=http://listen.rockradio.com/rock_hi?key\n"
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, text=pls_content)
-
-    api = ChannelsAPI(
-        mock_client, network="rockradio", listen_base="http://listen.rockradio.com"
-    )
-    result = await api.get_stream_url("rock", listen_key="key")
-
-    assert result == "http://listen.rockradio.com/rock_hi?key"
-    call_url = mock_client.get.call_args[0][0]
-    assert call_url.startswith("http://listen.rockradio.com/")
+def test_get_stream_url_uses_listen_base(mocker):
+    api = ChannelsAPI(mocker.AsyncMock(), network="rockradio", listen_base="http://prem2.rockradio.com:80")
+    assert api.get_stream_url("classichardrock", "key99") == "http://prem2.rockradio.com:80/classichardrock?key99"

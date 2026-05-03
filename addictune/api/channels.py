@@ -1,4 +1,3 @@
-import re
 import time
 
 import httpx
@@ -11,7 +10,7 @@ from ..models.channel import (
     NowPlaying,
     TrackHistoryEntry,
 )
-from ..models.track import ChannelTracklist, StreamQuality
+from ..models.track import ChannelTracklist
 from ._helpers import cached_get_list, cached_get_object
 
 
@@ -108,23 +107,10 @@ class ChannelsAPI:
         response = await self._client.delete(url)
         await raise_for_status(response)
 
-    async def get_stream_url(
-        self,
-        channel_key: str,
-        listen_key: str,
-        quality: StreamQuality = StreamQuality.HIGH,
-    ) -> str:
-        """Fetch the live stream URL for a channel.
+    def get_stream_url(self, channel_key: str, listen_key: str) -> str:
+        """Return the direct stream URL for a channel.
 
-        Downloads the ``.pls`` playlist from the listen host and
-        returns the first stream URL found inside it.
+        Format: ``{listen_base}/{channel_key}?{listen_key}``
+        Configure ADDICTUNE_LISTEN_BASE in .env for your network.
         """
-        url = f"{self._listen_base}/{quality.value}/{channel_key}.pls"
-        response = await self._client.get(url, params={"listen_key": listen_key})
-        await raise_for_status(response)
-
-        urls = re.findall(r"File\d+=(http[^\s]+)", response.text)
-        if not urls:
-            raise ValueError("No stream URLs found in PLS response")
-
-        return urls[0]
+        return f"{self._listen_base}/{channel_key}?{listen_key}"
