@@ -1,8 +1,9 @@
 import httpx
 
 from .api import ChannelsAPI
-from .auth import AuthResponse, login
+from .auth import login
 from .config import AddictuneSettings
+from .models.auth import AuthResponse
 from .transport import RetryTransport, TransportConfig
 
 

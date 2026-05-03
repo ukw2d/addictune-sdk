@@ -1,7 +1,9 @@
 import httpx
 
 from .. import cache
+from ..exceptions import raise_for_status
 from ..headers import ResponseHeaders
+from ..models.channel import Channel
 
 
 class ChannelsAPI:
@@ -9,7 +11,7 @@ class ChannelsAPI:
         self._client = client
         self._network = network
 
-    async def get_all(self) -> list:
+    async def get_all(self) -> list[Channel]:
         url = f"/{self._network}/channels"
         etag, cached_data = cache.get_etag(url)
 
@@ -17,13 +19,13 @@ class ChannelsAPI:
         response = await self._client.get(url, headers=headers)
 
         if response.status_code == 304 and cached_data is not None:
-            return cached_data
+            return [Channel.model_validate(ch) for ch in cached_data]
 
-        response.raise_for_status()
+        await raise_for_status(response)
         data = response.json()
         rh = ResponseHeaders.model_validate(dict(response.headers))
 
         if rh.etag:
             cache.set_etag(url, rh.etag, data, ttl=rh.ttl)
 
-        return data
+        return [Channel.model_validate(ch) for ch in data]
