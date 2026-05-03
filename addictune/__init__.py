@@ -1,3 +1,4 @@
+from .api import AuthAPI, TracksAPI
 from .client import AddictuneClient
 from .config import AddictuneSettings
 from .exceptions import (
@@ -21,6 +22,8 @@ from .models import (
     ListenHistoryEntry,
     NowPlaying,
     SimilarChannel,
+    SkipEvent,
+    StreamQuality,
     Track,
     TrackHistoryEntry,
     Votes,
@@ -33,6 +36,7 @@ __all__ = [
     "AddictuneAuthError",
     "AddictuneNotFoundError",
     "AddictuneAPIError",
+    "AuthAPI",
     "Artist",
     "AudioQuality",
     "AudioQualityDetail",
@@ -47,7 +51,10 @@ __all__ = [
     "ListenHistoryEntry",
     "NowPlaying",
     "SimilarChannel",
+    "SkipEvent",
+    "StreamQuality",
     "Track",
     "TrackHistoryEntry",
+    "TracksAPI",
     "Votes",
 ]

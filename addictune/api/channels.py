@@ -1,3 +1,4 @@
+import re
 import time
 
 import httpx
@@ -10,14 +11,20 @@ from ..models.channel import (
     NowPlaying,
     TrackHistoryEntry,
 )
-from ..models.track import ChannelTracklist
+from ..models.track import ChannelTracklist, StreamQuality
 from ._helpers import cached_get_list, cached_get_object
 
 
 class ChannelsAPI:
-    def __init__(self, client: httpx.AsyncClient, network: str = "di"):
+    def __init__(
+        self,
+        client: httpx.AsyncClient,
+        network: str = "di",
+        listen_base: str = "",
+    ):
         self._client = client
         self._network = network
+        self._listen_base = listen_base
 
     async def get_all(self) -> list[Channel]:
         return await cached_get_list(
@@ -82,7 +89,42 @@ class ChannelsAPI:
         response = await self._client.post(url, json={"id": channel_id})
         await raise_for_status(response)
 
+    async def get_favorite(
+        self, user_id: int, channel_id: int
+    ) -> LikedChannelID | None:
+        url = f"/{self._network}/members/{user_id}/favorites/channel/{channel_id}"
+        response = await self._client.get(url)
+        if response.status_code == 404:
+            return None
+        await raise_for_status(response)
+        data = response.json()
+        if not data:
+            return None
+        item = data[0] if isinstance(data, list) else data
+        return LikedChannelID.model_validate(item)
+
     async def remove_favorite(self, user_id: int, channel_id: int) -> None:
         url = f"/{self._network}/members/{user_id}/favorites/channel/{channel_id}"
         response = await self._client.delete(url)
         await raise_for_status(response)
+
+    async def get_stream_url(
+        self,
+        channel_key: str,
+        listen_key: str,
+        quality: StreamQuality = StreamQuality.HIGH,
+    ) -> str:
+        """Fetch the live stream URL for a channel.
+
+        Downloads the ``.pls`` playlist from the listen host and
+        returns the first stream URL found inside it.
+        """
+        url = f"{self._listen_base}/{quality.value}/{channel_key}.pls"
+        response = await self._client.get(url, params={"listen_key": listen_key})
+        await raise_for_status(response)
+
+        urls = re.findall(r"File\d+=(http[^\s]+)", response.text)
+        if not urls:
+            raise ValueError("No stream URLs found in PLS response")
+
+        return urls[0]

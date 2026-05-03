@@ -15,6 +15,9 @@ from .track import (
     AudioQualityDetail,
     ChannelTracklist,
     CurrentAudioQuality,
+    LikedTrack,
+    SkipEvent,
+    StreamQuality,
     Track,
 )
 
@@ -28,6 +31,9 @@ __all__ = [
     "ChannelTracklist",
     "ContentAsset",
     "CurrentAudioQuality",
+    "LikedTrack",
+    "SkipEvent",
+    "StreamQuality",
     "ImageSet",
     "LikedChannelID",
     "ListenHistoryEntry",

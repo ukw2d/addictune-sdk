@@ -14,7 +14,7 @@ from addictune.models.channel import (
     NowPlaying,
     TrackHistoryEntry,
 )
-from addictune.models.track import ChannelTracklist
+from addictune.models.track import ChannelTracklist, StreamQuality
 from tests.conftest import make_response
 
 # ── get_all ──────────────────────────────────────────────────────────
@@ -255,7 +255,14 @@ async def test_get_routine_returns_routine(mocker):
         "routine_id": 99,
         "channel_id": 1,
         "expires_on": "2026-05-04T07:48:11-04:00",
-        "tracks": [{"id": 79159, "title": "Test Track"}],
+        "tracks": [
+            {
+                "id": 79159,
+                "title": "Test Track",
+                "content_format_id": 5,
+                "content_quality_id": 3,
+            }
+        ],
     }
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, routine_data)
@@ -413,3 +420,126 @@ async def test_remove_favorite_raises_on_error(mocker):
     api = ChannelsAPI(mock_client, network="di")
     with pytest.raises(AddictuneNotFoundError):
         await api.remove_favorite(user_id=13716939, channel_id=999)
+
+
+# ── get_favorite ──────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_favorite_returns_liked_channel(mocker):
+    payload = {"channel_id": 1, "position": 0}
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, payload)
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_favorite(user_id=13716939, channel_id=1)
+
+    assert isinstance(result, LikedChannelID)
+    assert result.channel_id == 1
+    assert result.position == 0
+    mock_client.get.assert_called_once_with("/di/members/13716939/favorites/channel/1")
+
+
+@pytest.mark.asyncio
+async def test_get_favorite_returns_none_on_404(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(404, text="Not Found")
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_favorite(user_id=13716939, channel_id=999)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_favorite_returns_none_on_empty_response(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, [])
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_favorite(user_id=13716939, channel_id=999)
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_favorite_handles_list_response(mocker):
+    payload = [{"channel_id": 1, "position": 0}]
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, payload)
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_favorite(user_id=13716939, channel_id=1)
+
+    assert isinstance(result, LikedChannelID)
+    assert result.channel_id == 1
+
+
+# ── get_stream_url ────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_stream_url_returns_first_stream_url(mocker):
+    pls_content = (
+        "[playlist]\n"
+        "NumberOfEntries=2\n"
+        "File1=http://prem2.di.fm/trance_hi?abc123\n"
+        "Title1=DI.FM - Trance\n"
+        "File2=http://prem4.di.fm/trance_hi?abc123\n"
+        "Title2=DI.FM - Trance\n"
+    )
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, text=pls_content)
+
+    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
+    result = await api.get_stream_url("trance", listen_key="abc123")
+
+    assert result == "http://prem2.di.fm/trance_hi?abc123"
+    mock_client.get.assert_called_once_with(
+        "http://listen.di.fm/premium_high/trance.pls",
+        params={"listen_key": "abc123"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_stream_url_with_custom_quality(mocker):
+    pls_content = "File1=http://prem2.di.fm/trance_med?abc123\n"
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, text=pls_content)
+
+    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
+    result = await api.get_stream_url(
+        "trance", listen_key="abc123", quality=StreamQuality.MEDIUM
+    )
+
+    assert result == "http://prem2.di.fm/trance_med?abc123"
+    call_url = mock_client.get.call_args[0][0]
+    assert "/premium/" in call_url
+
+
+@pytest.mark.asyncio
+async def test_get_stream_url_raises_on_empty_pls(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(
+        200, text="[playlist]\nNumberOfEntries=0\n"
+    )
+
+    api = ChannelsAPI(mock_client, network="di", listen_base="http://listen.di.fm")
+    with pytest.raises(ValueError, match="No stream URLs found"):
+        await api.get_stream_url("trance", listen_key="abc123")
+
+
+@pytest.mark.asyncio
+async def test_get_stream_url_uses_listen_base_from_config(mocker):
+    pls_content = "File1=http://listen.rockradio.com/rock_hi?key\n"
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, text=pls_content)
+
+    api = ChannelsAPI(
+        mock_client, network="rockradio", listen_base="http://listen.rockradio.com"
+    )
+    result = await api.get_stream_url("rock", listen_key="key")
+
+    assert result == "http://listen.rockradio.com/rock_hi?key"
+    call_url = mock_client.get.call_args[0][0]
+    assert call_url.startswith("http://listen.rockradio.com/")

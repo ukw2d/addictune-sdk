@@ -79,3 +79,28 @@ def now_playing_payload():
 @pytest.fixture
 def favorites_payload():
     return load_fixture("favorites.json")
+
+
+@pytest.fixture
+def track_payload():
+    return load_fixture("track.json")
+
+
+@pytest.fixture
+def liked_track_payload():
+    return load_fixture("liked_track.json")
+
+
+@pytest.fixture
+def liked_tracks_payload():
+    return load_fixture("liked_tracks.json")
+
+
+@pytest.fixture
+def qualities_payload():
+    return load_fixture("qualities.json")
+
+
+@pytest.fixture
+def preferred_quality_payload():
+    return load_fixture("preferred_quality.json")

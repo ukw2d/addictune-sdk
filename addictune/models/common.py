@@ -31,8 +31,8 @@ class Votes(BaseModel):
 class ContentAsset(BaseModel):
     """A single streamable asset inside a track's ``content.assets`` list."""
 
-    content_format_id: int
-    content_quality_id: int
+    content_format_id: int | None = None
+    content_quality_id: int | None = None
     size: int | None = None
     url: str | None = None
 

@@ -20,6 +20,7 @@ class AddictuneSettings(BaseSettings):
     )
 
     api_base: str = "https://api.audioaddict.com/v1"
+    listen_base: str = "https://listen.{network}"
     network: str = "di"
     timeout: float = 30.0
     networks: dict[str, str] = Field(default_factory=lambda: dict(NETWORKS))
@@ -28,3 +29,8 @@ class AddictuneSettings(BaseSettings):
     @property
     def network_name(self) -> str:
         return self.networks.get(self.network, self.network)
+
+    @computed_field
+    @property
+    def resolved_listen_base(self) -> str:
+        return self.listen_base.format(network=self.network)

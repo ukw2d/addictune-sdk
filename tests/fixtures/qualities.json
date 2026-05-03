@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "name": "High",
+    "position": 1,
+    "premium_only": true,
+    "key": "high",
+    "default": false,
+    "content_format": {
+      "id": 5,
+      "key": "mp3",
+      "name": "MP3",
+      "extension": "mp3",
+      "mime_type": "audio/mpeg"
+    },
+    "content_quality": {
+      "id": 3,
+      "key": "320k",
+      "name": "320k",
+      "kilo_bitrate": 320
+    }
+  },
+  {
+    "id": 2,
+    "name": "Medium",
+    "position": 2,
+    "premium_only": true,
+    "key": "medium",
+    "default": false,
+    "content_format": {
+      "id": 5,
+      "key": "mp3",
+      "name": "MP3",
+      "extension": "mp3",
+      "mime_type": "audio/mpeg"
+    },
+    "content_quality": {
+      "id": 2,
+      "key": "128k",
+      "name": "128k",
+      "kilo_bitrate": 128
+    }
+  },
+  {
+    "id": 3,
+    "name": "Low",
+    "position": 3,
+    "premium_only": false,
+    "key": "low",
+    "default": true,
+    "content_format": {
+      "id": 5,
+      "key": "mp3",
+      "name": "MP3",
+      "extension": "mp3",
+      "mime_type": "audio/mpeg"
+    },
+    "content_quality": {
+      "id": 1,
+      "key": "64k",
+      "name": "64k AAC",
+      "kilo_bitrate": 64
+    }
+  }
+]

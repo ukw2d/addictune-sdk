@@ -1,0 +1,33 @@
+{
+  "id": 2027566,
+  "title": "Adagio for Strings",
+  "display_artist": "Tiësto",
+  "display_title": "Adagio for Strings",
+  "mix": false,
+  "artists": [
+    {"id": 2415, "name": "Tiësto", "slug": "tiesto", "asset_url": "https://cdn.audioaddict.com/artists/tiesto.jpg"}
+  ],
+  "votes": {"up": 142, "down": 3},
+  "images": {
+    "default": "//cdn-images.audioaddict.com/1/a/e/b/8/e/1aeb8e30b619175bf0dbb58ecaa3601a.png"
+  },
+  "is_show_asset": false,
+  "asset_url": "https://cdn.audioaddict.com/tracks/2027566.jpg",
+  "content": {
+    "length": 424,
+    "assets": [
+      {
+        "content_format_id": 5,
+        "content_quality_id": 3,
+        "size": 6789123,
+        "url": "https://prem2.di.fm/adagio_for_strings_128k.mp3?listen_key"
+      },
+      {
+        "content_format_id": 5,
+        "content_quality_id": 5,
+        "size": 20367369,
+        "url": "https://prem2.di.fm/adagio_for_strings_320k.mp3?listen_key"
+      }
+    ]
+  }
+}
