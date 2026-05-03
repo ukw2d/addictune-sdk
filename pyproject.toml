@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "addictune-sdk"
+version = "0.1.0"
+description = "Python SDK for Addictune Radio API"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx>=0.28",
+    "pydantic>=2.11",
+    "pydantic-settings>=2.9",
+    "tenacity>=9",
+    "circuitbreaker>=2",
+    "diskcache>=5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["addictune"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.25",
+]
