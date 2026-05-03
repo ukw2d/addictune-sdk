@@ -78,3 +78,10 @@ class LikedChannelID(BaseModel):
     position: int | None = None
 
     model_config = {"extra": "ignore"}
+
+
+class ListenHistoryEntry(BaseModel):
+    track: TrackHistoryEntry
+    played_at: str | None = None
+
+    model_config = {"extra": "ignore"}

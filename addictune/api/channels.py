@@ -6,9 +6,11 @@ from ..exceptions import raise_for_status
 from ..models.channel import (
     Channel,
     LikedChannelID,
+    ListenHistoryEntry,
     NowPlaying,
     TrackHistoryEntry,
 )
+from ..models.track import ChannelTracklist
 from ._helpers import cached_get_list, cached_get_object
 
 
@@ -44,12 +46,7 @@ class ChannelsAPI:
         channel_id: int,
         audio_token: str,
         tune_in: bool = True,
-    ) -> dict:
-        """Return the raw routine tracklist response as a dict.
-
-        The response shape is ``{"routine_id", "channel_id", "expires_on", "tracks"}``.
-        Tracks contain streaming URLs that expire, so this endpoint is never ETag-cached.
-        """
+    ) -> ChannelTracklist:
         url = f"/{self._network}/routines/channel/{channel_id}"
         params = {
             "tune_in": str(tune_in).lower(),
@@ -58,7 +55,7 @@ class ChannelsAPI:
         }
         response = await self._client.get(url, params=params)
         await raise_for_status(response)
-        return response.json()
+        return ChannelTracklist.model_validate(response.json())
 
     async def add_listen_history(self, channel_id: int, track_id: int) -> None:
         url = f"/{self._network}/listen_history"
@@ -67,12 +64,11 @@ class ChannelsAPI:
         )
         await raise_for_status(response)
 
-    async def get_listen_history(self, channel_id: int) -> list[dict]:
-        """Get listen history for a channel. Returns raw dicts."""
+    async def get_listen_history(self, channel_id: int) -> list[ListenHistoryEntry]:
         url = f"/{self._network}/listen_history/{channel_id}"
         response = await self._client.get(url)
         await raise_for_status(response)
-        return response.json()
+        return [ListenHistoryEntry.model_validate(e) for e in response.json()]
 
     async def get_favorites(self, user_id: int) -> list[LikedChannelID]:
         return await cached_get_list(

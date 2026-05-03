@@ -33,18 +33,7 @@ class ContentAsset(BaseModel):
 
     content_format_id: int
     content_quality_id: int
-    size: int
-    url: str
-
-    model_config = {"extra": "ignore"}
-
-
-class TrackContent(BaseModel):
-    """Streaming content metadata attached to routine tracklist tracks."""
-
-    interactive: bool = False
-    length: float | None = None
-    offset: int | None = None
-    assets: list[ContentAsset] = []
+    size: int | None = None
+    url: str | None = None
 
     model_config = {"extra": "ignore"}

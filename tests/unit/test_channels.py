@@ -10,9 +10,11 @@ from addictune.exceptions import (
 from addictune.models.channel import (
     Channel,
     LikedChannelID,
+    ListenHistoryEntry,
     NowPlaying,
     TrackHistoryEntry,
 )
+from addictune.models.track import ChannelTracklist
 from tests.conftest import make_response
 
 # ── get_all ──────────────────────────────────────────────────────────
@@ -248,7 +250,7 @@ async def test_get_currently_playing_returns_entries(mocker, now_playing_payload
 
 
 @pytest.mark.asyncio
-async def test_get_routine_returns_dict(mocker):
+async def test_get_routine_returns_routine(mocker):
     routine_data = {
         "routine_id": 99,
         "channel_id": 1,
@@ -261,11 +263,12 @@ async def test_get_routine_returns_dict(mocker):
     api = ChannelsAPI(mock_client, network="di")
     result = await api.get_routine(1, audio_token="abc123")
 
-    assert result["routine_id"] == 99
-    assert result["channel_id"] == 1
-    assert len(result["tracks"]) == 1
+    assert isinstance(result, ChannelTracklist)
+    assert result.routine_id == 99
+    assert result.channel_id == 1
+    assert len(result.tracks) == 1
+    assert result.tracks[0].title == "Test Track"
 
-    # Verify params include audio_token and tune_in
     call_params = mock_client.get.call_args[1]["params"]
     assert call_params["audio_token"] == "abc123"
     assert call_params["tune_in"] == "true"
@@ -312,8 +315,10 @@ async def test_get_listen_history_returns_list(mocker):
     api = ChannelsAPI(mock_client, network="di")
     result = await api.get_listen_history(1)
 
-    assert isinstance(result, list)
-    assert result[0]["track"]["id"] == 1
+    assert len(result) == 1
+    assert isinstance(result[0], ListenHistoryEntry)
+    assert result[0].track.id == 1
+    assert result[0].played_at == "2026-01-01T00:00:00Z"
     mock_client.get.assert_called_once_with("/di/listen_history/1")
 
 
