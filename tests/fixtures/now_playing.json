@@ -1,0 +1,24 @@
+[
+  {
+    "channel_id": 324,
+    "channel_key": "00sclubhits",
+    "track": {
+      "id": 2963972,
+      "display_artist": "Eric Prydz",
+      "display_title": "Call on Me (Filterheadz Remix)",
+      "start_time": "2026-05-03T07:41:13-04:00",
+      "duration": 424.0
+    }
+  },
+  {
+    "channel_id": 1,
+    "channel_key": "trance",
+    "track": {
+      "id": 3153063,
+      "display_artist": "Kaeno",
+      "display_title": "The Vanishing Point Reloaded 152",
+      "start_time": "2026-05-03T07:30:00-04:00",
+      "duration": 7210.0
+    }
+  }
+]

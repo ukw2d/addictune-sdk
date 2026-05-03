@@ -64,3 +64,18 @@ def channels_response(channels_list):
         channels_list,
         headers={"etag": '"abc123"', "cache-control": "max-age=300", "age": "0"},
     )
+
+
+@pytest.fixture
+def track_history_payload():
+    return load_fixture("track_history.json")
+
+
+@pytest.fixture
+def now_playing_payload():
+    return load_fixture("now_playing.json")
+
+
+@pytest.fixture
+def favorites_payload():
+    return load_fixture("favorites.json")

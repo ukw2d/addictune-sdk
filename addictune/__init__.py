@@ -6,7 +6,19 @@ from .exceptions import (
     AddictuneError,
     AddictuneNotFoundError,
 )
-from .models import AuthResponse, Channel, ChannelArtist
+from .models import (
+    AuthResponse,
+    Channel,
+    ChannelArtist,
+    ContentAsset,
+    ImageSet,
+    LikedChannelID,
+    NowPlaying,
+    SimilarChannel,
+    TrackContent,
+    TrackHistoryEntry,
+    Votes,
+)
 
 __all__ = [
     "AddictuneClient",
@@ -18,4 +30,12 @@ __all__ = [
     "AuthResponse",
     "Channel",
     "ChannelArtist",
+    "ContentAsset",
+    "ImageSet",
+    "LikedChannelID",
+    "NowPlaying",
+    "SimilarChannel",
+    "TrackContent",
+    "TrackHistoryEntry",
+    "Votes",
 ]

@@ -1,0 +1,22 @@
+[
+  {
+    "network_id": 1,
+    "channel_id": 1,
+    "artist": "Kaeno",
+    "display_artist": "Kaeno",
+    "title": "The Vanishing Point Reloaded 152",
+    "display_title": "The Vanishing Point Reloaded 152",
+    "track": "Kaeno - The Vanishing Point Reloaded 152",
+    "length": 7210,
+    "duration": 7210,
+    "started": 1777806000,
+    "type": "track",
+    "track_id": 3153063,
+    "votes": {
+      "up": 7,
+      "down": 1
+    },
+    "release": null,
+    "art_url": "//cdn-images.audioaddict.com/1/a/e/b/8/e/1aeb8e30b619175bf0dbb58ecaa3601a.png"
+  }
+]
