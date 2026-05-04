@@ -9,6 +9,7 @@ from .channel import (
     TrackHistoryEntry,
 )
 from .common import ContentAsset, ImageSet, Votes
+from .network import BUILTIN_NETWORKS, Network
 from .track import (
     Artist,
     AudioQuality,
@@ -25,12 +26,14 @@ __all__ = [
     "AudioQuality",
     "AudioQualityDetail",
     "AuthResponse",
+    "BUILTIN_NETWORKS",
     "Channel",
     "ChannelArtist",
     "ChannelTracklist",
     "ContentAsset",
     "CurrentAudioQuality",
     "LikedTrack",
+    "Network",
     "SkipEvent",
     "ImageSet",
     "LikedChannelID",
