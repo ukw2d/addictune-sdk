@@ -480,22 +480,80 @@ async def test_get_favorite_handles_list_response(mocker):
 # ── get_stream_url ────────────────────────────────────────────────────
 
 
-def test_get_stream_url_constructs_url(mocker):
+def test_get_stream_url_di_hi(mocker):
     api = ChannelsAPI(
-        mocker.AsyncMock(), network="di", listen_base="http://prem2.di.fm:80"
+        mocker.AsyncMock(),
+        network="di",
+        listen_base="http://prem2.di.fm:80",
+        stream_suffixes={"hi": "_hi", "aac": ""},
     )
     assert (
-        api.get_stream_url("trance", "abc123") == "http://prem2.di.fm:80/trance?abc123"
+        api.get_stream_url("progressive", "abc123", quality="hi")
+        == "http://prem2.di.fm:80/progressive_hi?abc123"
     )
 
 
-def test_get_stream_url_uses_listen_base(mocker):
+def test_get_stream_url_di_aac(mocker):
+    api = ChannelsAPI(
+        mocker.AsyncMock(),
+        network="di",
+        listen_base="http://prem2.di.fm:80",
+        stream_suffixes={"hi": "_hi", "aac": ""},
+    )
+    assert (
+        api.get_stream_url("progressive", "abc123", quality="aac")
+        == "http://prem2.di.fm:80/progressive?abc123"
+    )
+
+
+def test_get_stream_url_rockradio_hi(mocker):
     api = ChannelsAPI(
         mocker.AsyncMock(),
         network="rockradio",
         listen_base="http://prem2.rockradio.com:80",
+        stream_suffixes={"hi": "", "aac": "_aac"},
     )
     assert (
-        api.get_stream_url("classichardrock", "key99")
+        api.get_stream_url("classichardrock", "key99", quality="hi")
         == "http://prem2.rockradio.com:80/classichardrock?key99"
+    )
+
+
+def test_get_stream_url_rockradio_aac(mocker):
+    api = ChannelsAPI(
+        mocker.AsyncMock(),
+        network="rockradio",
+        listen_base="http://prem2.rockradio.com:80",
+        stream_suffixes={"hi": "", "aac": "_aac"},
+    )
+    assert (
+        api.get_stream_url("classichardrock", "key99", quality="aac")
+        == "http://prem2.rockradio.com:80/classichardrock_aac?key99"
+    )
+
+
+def test_get_stream_url_default_quality_is_hi(mocker):
+    api = ChannelsAPI(
+        mocker.AsyncMock(),
+        network="di",
+        listen_base="http://prem2.di.fm:80",
+        stream_suffixes={"hi": "_hi", "aac": ""},
+    )
+    # Default quality is "hi"
+    assert (
+        api.get_stream_url("trance", "abc123")
+        == "http://prem2.di.fm:80/trance_hi?abc123"
+    )
+
+
+def test_get_stream_url_unknown_quality_uses_empty_suffix(mocker):
+    api = ChannelsAPI(
+        mocker.AsyncMock(),
+        network="di",
+        listen_base="http://prem2.di.fm:80",
+        stream_suffixes={"hi": "_hi", "aac": ""},
+    )
+    assert (
+        api.get_stream_url("trance", "abc123", quality="unknown")
+        == "http://prem2.di.fm:80/trance?abc123"
     )

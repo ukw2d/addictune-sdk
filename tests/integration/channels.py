@@ -73,9 +73,9 @@ async def get_currently_playing(di) -> None:
 
 
 async def get_stream_url(di, client) -> None:
-    url = di.channels.get_stream_url("trance", client.listen_key)
+    url = di.channels.get_stream_url("trance", client.listen_key, quality="hi")
     assert url.startswith("http://"), f"unexpected url: {url}"
-    assert "trance" in url, f"channel key missing from url: {url}"
+    assert "trance_hi" in url, f"channel key+suffix missing from url: {url}"
     assert client.listen_key in url, f"listen key missing from url: {url}"
 
 

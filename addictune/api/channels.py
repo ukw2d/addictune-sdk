@@ -20,10 +20,12 @@ class ChannelsAPI:
         client: httpx.AsyncClient,
         network: str = "di",
         listen_base: str = "",
+        stream_suffixes: dict[str, str] | None = None,
     ):
         self._client = client
         self._network = network
         self._listen_base = listen_base
+        self._stream_suffixes = stream_suffixes or {"hi": "_hi", "aac": ""}
 
     async def get_all(self) -> list[Channel]:
         return await cached_get_list(
@@ -110,10 +112,14 @@ class ChannelsAPI:
         response = await self._client.delete(url)
         await raise_for_status(response)
 
-    def get_stream_url(self, channel_key: str, listen_key: str) -> str:
+    def get_stream_url(
+        self, channel_key: str, listen_key: str, quality: str = "hi"
+    ) -> str:
         """Return the direct stream URL for a channel.
 
-        Format: ``{listen_base}/{channel_key}?{listen_key}``
-        Configure ADDICTUNE_LISTEN_BASE in .env for your network.
+        Format: ``{listen_base}/{channel_key}{suffix}?{listen_key}``
+        The suffix is looked up from the network's ``stream_suffixes``
+        mapping based on *quality* (default ``"hi"``).
         """
-        return f"{self._listen_base}/{channel_key}?{listen_key}"
+        suffix = self._stream_suffixes.get(quality, "")
+        return f"{self._listen_base}/{channel_key}{suffix}?{listen_key}"

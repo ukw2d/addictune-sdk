@@ -14,12 +14,17 @@ class Network(BaseModel):
         listen_domain: Domain used to construct stream URLs (e.g. ``"di.fm"``).
         listen_base: Full streaming base URL.  If not provided, derived from
             ``listen_domain`` as ``http://prem2.{listen_domain}:80``.
+        stream_suffixes: Mapping of quality key → channel key suffix for stream
+            URLs.  For example ``{"hi": "_hi", "aac": ""}`` means the ``hi``
+            quality appends ``_hi`` to the channel key while ``aac`` appends
+            nothing.  Defaults to ``{"hi": "_hi", "aac": ""}`` (DI.FM-style).
     """
 
     slug: str
     name: str
     listen_domain: str
     listen_base: str = ""
+    stream_suffixes: dict[str, str] = {"hi": "_hi", "aac": ""}
 
     model_config = {"frozen": True}
 
@@ -37,7 +42,12 @@ class Network(BaseModel):
 BUILTIN_NETWORKS: list[Network] = [
     Network(slug="di", name="DI.FM", listen_domain="di.fm"),
     Network(slug="radiotunes", name="RadioTunes", listen_domain="radiotunes.com"),
-    Network(slug="rockradio", name="RockRadio", listen_domain="rockradio.com"),
+    Network(
+        slug="rockradio",
+        name="RockRadio",
+        listen_domain="rockradio.com",
+        stream_suffixes={"hi": "", "aac": "_aac"},
+    ),
     Network(slug="jazzradio", name="JazzRadio", listen_domain="jazzradio.com"),
     Network(
         slug="classicalradio",

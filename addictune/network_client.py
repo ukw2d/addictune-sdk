@@ -16,7 +16,9 @@ class NetworkClient:
         self._client = http_client
         self._network = network
         self.auth = AuthAPI(http_client, network.slug)
-        self.channels = ChannelsAPI(http_client, network.slug, network.listen_base)
+        self.channels = ChannelsAPI(
+            http_client, network.slug, network.listen_base, network.stream_suffixes
+        )
         self.tracks = TracksAPI(http_client, network.slug)
 
     @property
