@@ -27,12 +27,15 @@ class ChannelsAPI:
 
     async def get_all(self) -> list[Channel]:
         return await cached_get_list(
-            self._client, f"/{self._network}/channels", Channel
+            self._client, f"/{self._network}/channels", Channel, id_field="id"
         )
 
     async def get_by_id(self, channel_id: int) -> Channel:
         return await cached_get_object(
-            self._client, f"/{self._network}/channels/{channel_id}", Channel
+            self._client,
+            f"/{self._network}/channels/{channel_id}",
+            Channel,
+            index_key=f"/{self._network}/channels/id={channel_id}",
         )
 
     async def get_track_history(self, channel_id: int) -> list[TrackHistoryEntry]:

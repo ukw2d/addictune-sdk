@@ -102,3 +102,77 @@ async def test_cached_get_object_304_returns_cached(mocker, channel_payload):
     result = await cached_get_object(mock_client, "/di/channels/1", Channel)
 
     assert result.key == "trance"
+
+
+# ── list→object index caching ────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_cached_get_list_indexes_items_when_id_field_given(mocker):
+    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mock_index = mocker.patch("addictune.api._helpers.cache.index_list")
+
+    payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(
+        200, payload, headers={"etag": '"e1"', "cache-control": "max-age=300"}
+    )
+
+    await cached_get_list(mock_client, "/di/channels", Channel, id_field="id")
+
+    mock_index.assert_called_once_with("/di/channels", payload, id_field="id", ttl=300)
+
+
+@pytest.mark.asyncio
+async def test_cached_get_list_skips_index_when_no_id_field(mocker):
+    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mock_index = mocker.patch("addictune.api._helpers.cache.index_list")
+
+    payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(
+        200, payload, headers={"etag": '"e1"', "cache-control": "max-age=300"}
+    )
+
+    await cached_get_list(mock_client, "/di/channels", Channel)
+
+    mock_index.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_cached_get_object_uses_index_before_http(mocker):
+    indexed_data = {"id": 1, "key": "trance", "name": "Trance", "network_id": 1}
+    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=indexed_data)
+    mock_get_etag = mocker.patch("addictune.api._helpers.cache.get_etag")
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+
+    result = await cached_get_object(
+        mock_client, "/di/channels/1", Channel, index_key="/di/channels/id=1"
+    )
+
+    assert isinstance(result, Channel)
+    assert result.key == "trance"
+    # No HTTP call made
+    mock_client.get.assert_not_called()
+    mock_get_etag.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_cached_get_object_falls_back_when_index_miss(mocker):
+    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune.api._helpers.cache.set_etag")
+
+    payload = {"id": 1, "key": "trance", "name": "Trance", "network_id": 1}
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, payload)
+
+    result = await cached_get_object(
+        mock_client, "/di/channels/1", Channel, index_key="/di/channels/id=1"
+    )
+
+    assert result.key == "trance"
+    mock_client.get.assert_called_once()

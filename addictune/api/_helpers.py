@@ -16,13 +16,15 @@ async def cached_get_list(
     client: httpx.AsyncClient,
     url: str,
     model: type[T],
+    id_field: str | None = None,
 ) -> list[T]:
     """ETag-cached GET that returns a list of validated models.
 
     1. Checks the ETag cache for *url*.
     2. Sends ``If-None-Match`` if a cached ETag exists.
     3. On 304, returns models validated from cached data.
-    4. On success, stores the new ETag and returns validated models.
+    4. On success, stores the new ETag, indexes items (if *id_field*
+       is given), and returns validated models.
     """
     etag, cached_data = cache.get_etag(url)
 
@@ -38,6 +40,8 @@ async def cached_get_list(
 
     if rh.etag:
         cache.set_etag(url, rh.etag, data, ttl=rh.ttl)
+        if id_field:
+            cache.index_list(url, data, id_field=id_field, ttl=rh.ttl)
 
     return [model.model_validate(item) for item in data]
 
@@ -46,12 +50,20 @@ async def cached_get_object(
     client: httpx.AsyncClient,
     url: str,
     model: type[T],
+    index_key: str | None = None,
 ) -> T:
     """ETag-cached GET that returns a single validated model.
 
-    Same logic as :func:`cached_get_list` but for endpoints that
-    return a single JSON object instead of an array.
+    If *index_key* is given, checks the item index first (populated
+    by :func:`cached_get_list` with ``id_field``).  Falls back to
+    HTTP + ETag caching on miss.
     """
+    # Try the item index first (populated from a previous list fetch)
+    if index_key:
+        indexed = cache.get_indexed(index_key)
+        if indexed is not None:
+            return model.model_validate(indexed)
+
     etag, cached_data = cache.get_etag(url)
 
     headers = {"If-None-Match": etag} if etag else {}
