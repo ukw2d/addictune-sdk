@@ -9,6 +9,7 @@ from .channel import (
     TrackHistoryEntry,
 )
 from .common import ContentAsset, ImageSet, Votes
+from .mixshow import MixShow, ShowChannel, ShowEpisode, UpcomingEvent
 from .network import BUILTIN_NETWORKS, Network
 from .track import (
     Artist,
@@ -33,7 +34,10 @@ __all__ = [
     "ContentAsset",
     "CurrentAudioQuality",
     "LikedTrack",
+    "MixShow",
     "Network",
+    "ShowChannel",
+    "ShowEpisode",
     "SkipEvent",
     "ImageSet",
     "LikedChannelID",
@@ -42,5 +46,6 @@ __all__ = [
     "SimilarChannel",
     "Track",
     "TrackHistoryEntry",
+    "UpcomingEvent",
     "Votes",
 ]

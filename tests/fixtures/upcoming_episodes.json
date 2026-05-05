@@ -1,0 +1,26 @@
+[
+  {
+    "id": 801,
+    "name": "Upcoming Show Episode 1",
+    "free": true,
+    "start_at": "2024-01-20T18:00:00Z",
+    "end_at": "2024-01-20T19:00:00Z",
+    "show": {
+      "id": 123,
+      "name": "Global Trance Sounds",
+      "slug": "global-trance-sounds"
+    }
+  },
+  {
+    "id": 802,
+    "name": "Upcoming Show Episode 2",
+    "free": false,
+    "start_at": "2024-01-21T20:00:00Z",
+    "end_at": "2024-01-21T21:00:00Z",
+    "show": {
+      "id": 456,
+      "name": "Techno Sessions",
+      "slug": "techno-sessions"
+    }
+  }
+]

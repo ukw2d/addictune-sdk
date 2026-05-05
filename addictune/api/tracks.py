@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+
 import httpx
 
 from ..exceptions import raise_for_status
@@ -8,7 +10,7 @@ from ..models.track import (
     SkipEvent,
     Track,
 )
-from ._helpers import cached_get_list, cached_get_object
+from ._helpers import cached_get_list, cached_get_object, paginate
 
 
 class TracksAPI:
@@ -61,12 +63,52 @@ class TracksAPI:
         user_id: int,
         vote_type: str = "up",
         per_page: int = 20,
+        page: int = 1,
     ) -> list[Track]:
+        """Fetch a single page of liked tracks.
+
+        For auto-advancing across all pages, use :meth:`iter_liked_tracks`.
+        """
         url = f"/{self._network}/members/{user_id}/track_votes"
-        params = {"vote_type": vote_type, "per_page": per_page}
+        params = {"vote_type": vote_type, "per_page": per_page, "page": page}
         response = await self._client.get(url, params=params)
         await raise_for_status(response)
         return [LikedTrack.model_validate(item) for item in response.json()]
+
+    def iter_liked_tracks(
+        self,
+        user_id: int,
+        vote_type: str = "up",
+        per_page: int = 20,
+        start_page: int = 1,
+        end_page: int | None = None,
+    ) -> AsyncIterator[Track]:
+        """Yield liked tracks across all pages automatically.
+
+        Each page is ETag-cached independently.  Reads
+        ``paginate-pages`` response headers to know when to stop.
+
+        Args:
+            user_id: The authenticated user's ID.
+            vote_type: ``"up"`` or ``"down"``.
+            per_page: Items per page (server may cap this).
+            start_page: First page to request (1-based).
+            end_page: Last page to request.  ``None`` = fetch all.
+
+        Yields:
+            Validated :class:`Track` instances one at a time.
+        """
+        url = f"/{self._network}/members/{user_id}/track_votes"
+        params = {"vote_type": vote_type}
+        return paginate(
+            self._client,
+            url,
+            LikedTrack,
+            params=params,
+            per_page=per_page,
+            start_page=start_page,
+            end_page=end_page,
+        )
 
     # ── Voting ───────────────────────────────────────────────────
 

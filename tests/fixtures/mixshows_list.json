@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "id": 123,
+      "name": "Global Trance Sounds",
+      "slug": "global-trance-sounds",
+      "description": "Weekly trance show",
+      "active": true,
+      "channels": [{ "id": 1, "name": "Trance", "key": "trance" }]
+    },
+    {
+      "id": 456,
+      "name": "Techno Sessions",
+      "slug": "techno-sessions",
+      "description": "Deep techno journey",
+      "active": true,
+      "channels": [{ "id": 2, "name": "Techno", "key": "techno" }]
+    }
+  ]
+}

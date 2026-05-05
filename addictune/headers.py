@@ -6,6 +6,12 @@ class ResponseHeaders(BaseModel):
     cache_control: str | None = None
     age: int = 0
 
+    # Pagination headers returned by list endpoints
+    paginate_page: int | None = None
+    paginate_pages: int | None = None
+    paginate_records: int | None = None
+    paginate_per_page: int | None = None
+
     model_config = {"populate_by_name": True}
 
     @model_validator(mode="before")
@@ -16,6 +22,10 @@ class ResponseHeaders(BaseModel):
                 "etag": data.get("etag"),
                 "cache_control": data.get("cache-control"),
                 "age": data.get("age", 0),
+                "paginate_page": data.get("paginate-page"),
+                "paginate_pages": data.get("paginate-pages"),
+                "paginate_records": data.get("paginate-records"),
+                "paginate_per_page": data.get("paginate-perpage"),
             }
         return data
 

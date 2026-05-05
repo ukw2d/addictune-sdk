@@ -1,6 +1,6 @@
 import httpx
 
-from .api import AuthAPI, ChannelsAPI, TracksAPI
+from .api import AuthAPI, ChannelsAPI, MixShowsAPI, TracksAPI
 from .models.network import Network
 
 
@@ -19,6 +19,7 @@ class NetworkClient:
         self.channels = ChannelsAPI(
             http_client, network.slug, network.listen_base, network.stream_suffixes
         )
+        self.mixshows = MixShowsAPI(http_client, network.slug)
         self.tracks = TracksAPI(http_client, network.slug)
 
     @property

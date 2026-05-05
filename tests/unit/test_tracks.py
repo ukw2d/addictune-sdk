@@ -226,7 +226,7 @@ async def test_get_liked_tracks_passes_params(mocker, liked_tracks_payload):
     await api.get_liked_tracks(user_id=13716939, vote_type="down", per_page=10)
 
     call_params = mock_client.get.call_args[1]["params"]
-    assert call_params == {"vote_type": "down", "per_page": 10}
+    assert call_params == {"vote_type": "down", "per_page": 10, "page": 1}
 
 
 # ── vote ──────────────────────────────────────────────────────────────

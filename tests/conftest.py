@@ -104,3 +104,23 @@ def qualities_payload():
 @pytest.fixture
 def preferred_quality_payload():
     return load_fixture("preferred_quality.json")
+
+
+@pytest.fixture
+def mixshow_payload():
+    return load_fixture("mixshow.json")
+
+
+@pytest.fixture
+def mixshows_list_payload():
+    return load_fixture("mixshows_list.json")
+
+
+@pytest.fixture
+def show_episodes_payload():
+    return load_fixture("show_episodes.json")
+
+
+@pytest.fixture
+def upcoming_episodes_payload():
+    return load_fixture("upcoming_episodes.json")

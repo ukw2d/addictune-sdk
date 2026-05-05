@@ -1,0 +1,27 @@
+{
+  "id": 123,
+  "name": "Global Trance Sounds",
+  "slug": "global-trance-sounds",
+  "description": "Weekly trance show featuring the best in trance music",
+  "duration": 3600,
+  "active": true,
+  "human_readable_schedule": ["Fridays at 8PM UTC"],
+  "next_start_at": "2024-01-19T20:00:00Z",
+  "next_end_at": "2024-01-19T21:00:00Z",
+  "ondemand_episode_count": 52,
+  "artists": [{ "id": 1, "name": "DJ Trance", "slug": "dj-trance" }],
+  "now_playing": false,
+  "upcoming_event": {
+    "id": 456,
+    "name": "Global Trance Sounds Episode 53",
+    "slug": "global-trance-sounds-ep53",
+    "start_at": "2024-01-19T20:00:00Z",
+    "end_at": "2024-01-19T21:00:00Z"
+  },
+  "following": true,
+  "followers_count": 15000,
+  "channels": [{ "id": 1, "name": "Trance", "key": "trance" }],
+  "images": {
+    "default": "//cdn.example.com/shows/global-trance-sounds.jpg"
+  }
+}
