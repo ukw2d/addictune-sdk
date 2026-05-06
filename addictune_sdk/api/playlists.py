@@ -3,7 +3,7 @@ from collections.abc import AsyncIterator
 import httpx
 
 from ..exceptions import raise_for_status
-from ..models.playlist import Playlist, PlaylistTracks
+from ..models.playlist import Playlist, PlaylistListenHistoryEntry, PlaylistTracks
 from ._helpers import cached_get_list, cached_get_object, paginate
 
 
@@ -102,14 +102,16 @@ class PlaylistsAPI:
 
     # ── Listen history ───────────────────────────────────────────
 
-    async def get_listen_history(self, playlist_id: int) -> list[dict]:
+    async def get_listen_history(
+        self, playlist_id: int
+    ) -> list[PlaylistListenHistoryEntry]:
         url = f"/{self._network}/listen_history"
         response = await self._client.get(url, params={"playlist_id": playlist_id})
         await raise_for_status(response)
         data = response.json()
         if not data:
             return []
-        return data
+        return [PlaylistListenHistoryEntry.model_validate(item) for item in data]
 
     async def add_listen_history(self, playlist_id: int, track_id: int) -> None:
         url = f"/{self._network}/listen_history"

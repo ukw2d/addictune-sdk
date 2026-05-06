@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from session import get_session
 
-from addictune import Client
+from addictune_sdk import Client
 
 PAUSE = 1.5
 

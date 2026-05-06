@@ -24,8 +24,12 @@ class Client:
             timeout=self._settings.timeout,
             transport=RetryTransport(transport_config),
         )
-        self._listen_key: str | None = listen_key
-        self._session_key: str | None = session_key
+        self._listen_key: SecretStr | None = (
+            SecretStr(listen_key) if listen_key else None
+        )
+        self._session_key: SecretStr | None = (
+            SecretStr(session_key) if session_key else None
+        )
 
         if session_key:
             self._http_client.headers.update({"X-Session-Key": session_key})
@@ -61,21 +65,19 @@ class Client:
 
     @property
     def listen_key(self) -> str | None:
-        return self._listen_key
+        return self._listen_key.get_secret_value() if self._listen_key else None
 
     @property
     def session_key(self) -> str | None:
-        return self._session_key
+        return self._session_key.get_secret_value() if self._session_key else None
 
-    async def login(self, email: str, password: SecretStr) -> AuthResponse:
-        # Login always goes through the default network from settings
+    async def login(self, email: str, password: str) -> AuthResponse:
         default = self.network(self._settings.network)
-        auth = await default.auth.login(email, password.get_secret_value())
-        self._http_client.headers.update(
-            {"X-Session-Key": auth.api_key.get_secret_value()}
-        )
-        self._session_key = auth.api_key.get_secret_value()
-        self._listen_key = auth.listen_key.get_secret_value()
+        auth = await default.auth.login(email, password)
+        raw_key = auth.api_key.get_secret_value()
+        self._http_client.headers.update({"X-Session-Key": raw_key})
+        self._session_key = SecretStr(raw_key)
+        self._listen_key = SecretStr(auth.listen_key.get_secret_value())
         return auth
 
     async def close(self) -> None:

@@ -1,9 +1,9 @@
 import httpx
 import pytest
 
-from addictune.api.user import UserAPI
-from addictune.exceptions import AddictuneAPIError, AddictuneNotFoundError
-from addictune.models.user import PaymentMethod, Ping, PremiumStatus
+from addictune_sdk.api.user import UserAPI
+from addictune_sdk.exceptions import AddictuneAPIError, AddictuneNotFoundError
+from addictune_sdk.models.user import PaymentMethod, Ping, PremiumStatus
 from tests.conftest import make_response
 
 # ── ping ─────────────────────────────────────────────────────────────

@@ -62,7 +62,18 @@ class PlaylistTracks(BaseModel):
 
 
 class PlaylistListenHistoryEntry(BaseModel):
-    track: dict
+    track: Track
     played_at: int | str | None = None
 
     model_config = {"extra": "ignore"}
+
+    class Track(BaseModel):
+        id: int
+        title: str | None = None
+        display_title: str | None = None
+        display_artist: str | None = None
+        length: int | None = None
+        mix: bool = False
+        images: ImageSet | None = None
+
+        model_config = {"extra": "ignore"}

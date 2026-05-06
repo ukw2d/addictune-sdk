@@ -21,9 +21,7 @@ import os
 import time
 from pathlib import Path
 
-from pydantic import SecretStr
-
-from addictune import Client
+from addictune_sdk import Client
 
 _CACHE = Path(__file__).parent / ".session_cache.json"
 _TTL = 43200  # 12 hours
@@ -56,7 +54,7 @@ async def get_session() -> dict:
 
     print("  [session] logging in...")
     async with Client() as c:
-        auth = await c.login(email, SecretStr(password))
+        auth = await c.login(email, password)
         session = {
             "session_key": auth.api_key.get_secret_value(),
             "listen_key": auth.listen_key.get_secret_value(),

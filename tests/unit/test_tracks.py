@@ -1,9 +1,9 @@
 import httpx
 import pytest
 
-from addictune.api.tracks import TracksAPI
-from addictune.exceptions import AddictuneAPIError, AddictuneNotFoundError
-from addictune.models.track import (
+from addictune_sdk.api.tracks import TracksAPI
+from addictune_sdk.exceptions import AddictuneAPIError, AddictuneNotFoundError
+from addictune_sdk.models.track import (
     AudioQuality,
     CurrentAudioQuality,
     Track,
@@ -15,8 +15,8 @@ from tests.conftest import make_response
 
 @pytest.mark.asyncio
 async def test_get_qualities_returns_list(mocker, qualities_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(
@@ -38,8 +38,8 @@ async def test_get_qualities_returns_list(mocker, qualities_payload):
 
 @pytest.mark.asyncio
 async def test_get_qualities_uses_network_in_url(mocker, qualities_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, qualities_payload)
@@ -56,8 +56,8 @@ async def test_get_qualities_uses_network_in_url(mocker, qualities_payload):
 
 @pytest.mark.asyncio
 async def test_get_preferred_quality_returns_model(mocker, preferred_quality_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, preferred_quality_payload)
@@ -105,9 +105,9 @@ async def test_set_preferred_quality_raises_on_error(mocker):
 
 @pytest.mark.asyncio
 async def test_get_by_id_returns_track(mocker, track_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, track_payload)
@@ -133,11 +133,11 @@ async def test_get_by_id_returns_track(mocker, track_payload):
 @pytest.mark.asyncio
 async def test_get_by_id_uses_etag_cache(mocker, track_payload):
     mocker.patch(
-        "addictune.api._helpers.cache.get_etag",
+        "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"t1"', track_payload),
     )
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(304)
@@ -286,7 +286,7 @@ async def test_vote_raises_on_error(mocker):
     mock_client.post.return_value = make_response(401, text="Unauthorized")
 
     api = TracksAPI(mock_client, network="di")
-    from addictune.exceptions import AddictuneAuthError
+    from addictune_sdk.exceptions import AddictuneAuthError
 
     with pytest.raises(AddictuneAuthError):
         await api.vote(track_id=2027566, direction="up")

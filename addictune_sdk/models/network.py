@@ -13,7 +13,7 @@ class Network(BaseModel):
         name: Human-readable display name (e.g. ``"DI.FM"``, ``"RockRadio"``).
         listen_domain: Domain used to construct stream URLs (e.g. ``"di.fm"``).
         listen_base: Full streaming base URL.  If not provided, derived from
-            ``listen_domain`` as ``http://prem2.{listen_domain}:80``.
+            ``listen_domain`` as ``https://prem2.{listen_domain}``.
         stream_suffixes: Mapping of quality key → channel key suffix for stream
             URLs.  For example ``{"hi": "_hi", "aac": ""}`` means the ``hi``
             quality appends ``_hi`` to the channel key while ``aac`` appends
@@ -32,7 +32,7 @@ class Network(BaseModel):
     def _derive_listen_base(self) -> Network:
         if not self.listen_base:
             object.__setattr__(
-                self, "listen_base", f"http://prem2.{self.listen_domain}:80"
+                self, "listen_base", f"https://prem2.{self.listen_domain}"
             )
         return self
 

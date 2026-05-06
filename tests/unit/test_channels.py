@@ -1,20 +1,20 @@
 import httpx
 import pytest
 
-from addictune.api.channels import ChannelsAPI
-from addictune.exceptions import (
+from addictune_sdk.api.channels import ChannelsAPI
+from addictune_sdk.exceptions import (
     AddictuneAPIError,
     AddictuneAuthError,
     AddictuneNotFoundError,
 )
-from addictune.models.channel import (
+from addictune_sdk.models.channel import (
     Channel,
     LikedChannelID,
     ListenHistoryEntry,
     NowPlaying,
     TrackHistoryEntry,
 )
-from addictune.models.track import ChannelTracklist
+from addictune_sdk.models.track import ChannelTracklist
 from tests.conftest import make_response
 
 # ── get_all ──────────────────────────────────────────────────────────
@@ -22,8 +22,8 @@ from tests.conftest import make_response
 
 @pytest.mark.asyncio
 async def test_get_all_returns_channel_list(mocker, channels_response, channels_list):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = channels_response
@@ -39,8 +39,8 @@ async def test_get_all_returns_channel_list(mocker, channels_response, channels_
 
 @pytest.mark.asyncio
 async def test_get_all_uses_network_in_url(mocker, channels_response):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = channels_response
@@ -56,8 +56,8 @@ async def test_get_all_uses_network_in_url(mocker, channels_response):
 async def test_get_all_stores_etag_when_present(
     mocker, channels_response, channels_list
 ):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mock_set_etag = mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = channels_response
@@ -72,8 +72,8 @@ async def test_get_all_stores_etag_when_present(
 
 @pytest.mark.asyncio
 async def test_get_all_sends_if_none_match_when_etag_cached(mocker, channels_response):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=('"abc123"', []))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=('"abc123"', []))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = channels_response
@@ -89,7 +89,7 @@ async def test_get_all_sends_if_none_match_when_etag_cached(mocker, channels_res
 async def test_get_all_returns_cached_data_on_304(mocker, channel_payload):
     cached = [channel_payload]
     mocker.patch(
-        "addictune.api._helpers.cache.get_etag", return_value=('"abc123"', cached)
+        "addictune_sdk.api._helpers.cache.get_etag", return_value=('"abc123"', cached)
     )
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -104,8 +104,8 @@ async def test_get_all_returns_cached_data_on_304(mocker, channel_payload):
 
 @pytest.mark.asyncio
 async def test_get_all_no_etag_header_skips_cache_write(mocker, channels_list):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mock_set_etag = mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, channels_list)
@@ -118,7 +118,7 @@ async def test_get_all_no_etag_header_skips_cache_write(mocker, channels_list):
 
 @pytest.mark.asyncio
 async def test_get_all_raises_on_server_error(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(500, text="Server Error")
@@ -130,7 +130,7 @@ async def test_get_all_raises_on_server_error(mocker):
 
 @pytest.mark.asyncio
 async def test_get_all_raises_not_found(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(404, text="Not Found")
@@ -143,8 +143,8 @@ async def test_get_all_raises_not_found(mocker):
 @pytest.mark.asyncio
 async def test_get_all_channel_extra_fields_ignored(mocker):
     """Channel model has extra='ignore'; unknown fields from API should not raise."""
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     payload = [
         {
@@ -170,9 +170,9 @@ async def test_get_all_channel_extra_fields_ignored(mocker):
 
 @pytest.mark.asyncio
 async def test_get_by_id_returns_channel(mocker, channel_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, channel_payload)
@@ -188,11 +188,11 @@ async def test_get_by_id_returns_channel(mocker, channel_payload):
 @pytest.mark.asyncio
 async def test_get_by_id_uses_etag_cache(mocker, channel_payload):
     mocker.patch(
-        "addictune.api._helpers.cache.get_etag",
+        "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"v1"', channel_payload),
     )
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(304)
@@ -210,8 +210,8 @@ async def test_get_by_id_uses_etag_cache(mocker, channel_payload):
 
 @pytest.mark.asyncio
 async def test_get_track_history_returns_entries(mocker, track_history_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, track_history_payload)
@@ -232,8 +232,8 @@ async def test_get_track_history_returns_entries(mocker, track_history_payload):
 
 @pytest.mark.asyncio
 async def test_get_currently_playing_returns_entries(mocker, now_playing_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, now_playing_payload)
@@ -336,8 +336,8 @@ async def test_get_listen_history_returns_list(mocker):
 
 @pytest.mark.asyncio
 async def test_get_favorites_returns_liked_channels(mocker, favorites_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, favorites_payload)
@@ -356,10 +356,10 @@ async def test_get_favorites_returns_liked_channels(mocker, favorites_payload):
 @pytest.mark.asyncio
 async def test_get_favorites_uses_etag_cache(mocker, favorites_payload):
     mocker.patch(
-        "addictune.api._helpers.cache.get_etag",
+        "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"fav1"', favorites_payload),
     )
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(304)

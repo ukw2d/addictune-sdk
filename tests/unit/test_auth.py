@@ -1,9 +1,9 @@
 import httpx
 import pytest
 
-from addictune.api.auth import AuthAPI, _APP_AUTH
-from addictune.exceptions import AddictuneAuthError
-from addictune.models.auth import AuthResponse
+from addictune_sdk.api.auth import AuthAPI, _APP_AUTH
+from addictune_sdk.exceptions import AddictuneAuthError
+from addictune_sdk.models.auth import AuthResponse
 from tests.conftest import make_response
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from addictune.headers import ResponseHeaders
+from addictune_sdk.headers import ResponseHeaders
 
 
 def test_etag_parsed():

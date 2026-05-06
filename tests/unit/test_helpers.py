@@ -1,8 +1,8 @@
 import httpx
 import pytest
 
-from addictune.api._helpers import cached_get_list, cached_get_object
-from addictune.models.channel import Channel, LikedChannelID
+from addictune_sdk.api._helpers import cached_get_list, cached_get_object
+from addictune_sdk.models.channel import Channel, LikedChannelID
 from tests.conftest import make_response
 
 # ── cached_get_list ──────────────────────────────────────────────────
@@ -10,8 +10,8 @@ from tests.conftest import make_response
 
 @pytest.mark.asyncio
 async def test_cached_get_list_fresh_response(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -26,7 +26,7 @@ async def test_cached_get_list_fresh_response(mocker):
 @pytest.mark.asyncio
 async def test_cached_get_list_304_returns_cached(mocker):
     cached = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=('"v1"', cached))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=('"v1"', cached))
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(304)
@@ -42,8 +42,8 @@ async def test_cached_get_list_304_returns_cached(mocker):
 
 @pytest.mark.asyncio
 async def test_cached_get_list_stores_etag(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mock_set_etag = mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     payload = [{"channel_id": 1, "position": 0}]
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -59,8 +59,8 @@ async def test_cached_get_list_stores_etag(mocker):
 
 @pytest.mark.asyncio
 async def test_cached_get_list_no_etag_skips_cache_write(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mock_set_etag = mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -77,8 +77,8 @@ async def test_cached_get_list_no_etag_skips_cache_write(mocker):
 
 @pytest.mark.asyncio
 async def test_cached_get_object_fresh_response(mocker, channel_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, channel_payload)
@@ -92,7 +92,7 @@ async def test_cached_get_object_fresh_response(mocker, channel_payload):
 @pytest.mark.asyncio
 async def test_cached_get_object_304_returns_cached(mocker, channel_payload):
     mocker.patch(
-        "addictune.api._helpers.cache.get_etag",
+        "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"v1"', channel_payload),
     )
 
@@ -109,9 +109,9 @@ async def test_cached_get_object_304_returns_cached(mocker, channel_payload):
 
 @pytest.mark.asyncio
 async def test_cached_get_list_indexes_items_when_id_field_given(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
-    mock_index = mocker.patch("addictune.api._helpers.cache.index_list")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mock_index = mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -126,9 +126,9 @@ async def test_cached_get_list_indexes_items_when_id_field_given(mocker):
 
 @pytest.mark.asyncio
 async def test_cached_get_list_skips_index_when_no_id_field(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
-    mock_index = mocker.patch("addictune.api._helpers.cache.index_list")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mock_index = mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -144,8 +144,8 @@ async def test_cached_get_list_skips_index_when_no_id_field(mocker):
 @pytest.mark.asyncio
 async def test_cached_get_object_uses_index_before_http(mocker):
     indexed_data = {"id": 1, "key": "trance", "name": "Trance", "network_id": 1}
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=indexed_data)
-    mock_get_etag = mocker.patch("addictune.api._helpers.cache.get_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=indexed_data)
+    mock_get_etag = mocker.patch("addictune_sdk.api._helpers.cache.get_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
 
@@ -162,9 +162,9 @@ async def test_cached_get_object_uses_index_before_http(mocker):
 
 @pytest.mark.asyncio
 async def test_cached_get_object_falls_back_when_index_miss(mocker):
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     payload = {"id": 1, "key": "trance", "name": "Trance", "network_id": 1}
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)

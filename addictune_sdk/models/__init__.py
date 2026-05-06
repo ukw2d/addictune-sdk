@@ -11,9 +11,16 @@ from .channel import (
 from .common import ContentAsset, ImageSet, Votes
 from .mixshow import MixShow, ShowChannel, ShowEpisode, UpcomingEvent
 from .network import BUILTIN_NETWORKS, Network
-from .playlist import Playlist, PlaylistProgress, PlaylistTag, PlaylistTracks
+from .playlist import (
+    Playlist,
+    PlaylistListenHistoryEntry,
+    PlaylistProgress,
+    PlaylistTag,
+    PlaylistTracks,
+)
 from .track import (
     Artist,
+    AudioFormat,
     AudioQuality,
     AudioQualityDetail,
     ChannelTracklist,
@@ -26,6 +33,7 @@ from .user import PaymentMethod, PaymentType, Ping, PremiumStatus
 
 __all__ = [
     "Artist",
+    "AudioFormat",
     "AudioQuality",
     "AudioQualityDetail",
     "AuthResponse",
@@ -41,6 +49,7 @@ __all__ = [
     "PaymentMethod",
     "PaymentType",
     "Playlist",
+    "PlaylistListenHistoryEntry",
     "PlaylistProgress",
     "PlaylistTag",
     "PlaylistTracks",

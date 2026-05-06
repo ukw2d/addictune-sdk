@@ -1,6 +1,6 @@
 import pytest
 
-from addictune.exceptions import (
+from addictune_sdk.exceptions import (
     AddictuneAPIError,
     AddictuneAuthError,
     AddictuneError,

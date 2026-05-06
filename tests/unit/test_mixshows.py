@@ -1,9 +1,9 @@
 import httpx
 import pytest
 
-from addictune.api.mixshows import MixShowsAPI
-from addictune.exceptions import AddictuneAPIError
-from addictune.models.mixshow import MixShow, ShowEpisode
+from addictune_sdk.api.mixshows import MixShowsAPI
+from addictune_sdk.exceptions import AddictuneAPIError
+from addictune_sdk.models.mixshow import MixShow, ShowEpisode
 from tests.conftest import make_response
 
 # ── get_by_id ────────────────────────────────────────────────────────
@@ -11,9 +11,9 @@ from tests.conftest import make_response
 
 @pytest.mark.asyncio
 async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, mixshow_payload)
@@ -37,9 +37,9 @@ async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
 
 @pytest.mark.asyncio
 async def test_get_by_id_uses_network_in_url(mocker, mixshow_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, mixshow_payload)
@@ -59,7 +59,7 @@ async def test_iter_shows_returns_shows(mocker, mixshows_list_payload):
     # Extract the items from the envelope for mocking _fetch_page
     items = mixshows_list_payload["results"]
     mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),  # (items, total_pages)
     )
 
@@ -80,7 +80,7 @@ async def test_iter_shows_returns_shows(mocker, mixshows_list_payload):
 async def test_iter_shows_passes_unwrap_key(mocker, mixshows_list_payload):
     items = mixshows_list_payload["results"]
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),
     )
 
@@ -98,7 +98,7 @@ async def test_iter_shows_passes_unwrap_key(mocker, mixshows_list_payload):
 async def test_iter_shows_passes_active_param(mocker, mixshows_list_payload):
     items = mixshows_list_payload["results"]
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),
     )
 
@@ -117,7 +117,7 @@ async def test_iter_shows_passes_active_param(mocker, mixshows_list_payload):
 @pytest.mark.asyncio
 async def test_iter_episodes_returns_episodes(mocker, show_episodes_payload):
     mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(show_episodes_payload, 1),
     )
 
@@ -141,7 +141,7 @@ async def test_iter_episodes_returns_episodes(mocker, show_episodes_payload):
 @pytest.mark.asyncio
 async def test_iter_episodes_uses_show_id_in_url(mocker, show_episodes_payload):
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(show_episodes_payload, 1),
     )
 
@@ -215,7 +215,7 @@ async def test_get_upcoming_raises_on_error(mocker):
 async def test_iter_followed_returns_shows(mocker, mixshows_list_payload):
     items = mixshows_list_payload["results"]
     mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),
     )
 
@@ -234,7 +234,7 @@ async def test_iter_followed_returns_shows(mocker, mixshows_list_payload):
 async def test_iter_followed_uses_user_id_in_url(mocker, mixshows_list_payload):
     items = mixshows_list_payload["results"]
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),
     )
 
@@ -251,7 +251,7 @@ async def test_iter_followed_uses_user_id_in_url(mocker, mixshows_list_payload):
 async def test_iter_followed_passes_active_param(mocker, mixshows_list_payload):
     items = mixshows_list_payload["results"]
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(items, 1),
     )
 

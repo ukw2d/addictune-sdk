@@ -1,16 +1,15 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from pydantic import SecretStr
 
-from addictune.api.auth import AuthAPI
-from addictune.api.channels import ChannelsAPI
-from addictune.client import AddictuneClient, Client
-from addictune.config import AddictuneSettings
-from addictune.exceptions import AddictuneAuthError
-from addictune.models.auth import AuthResponse
-from addictune.models.network import Network
-from addictune.network_client import NetworkClient
+from addictune_sdk.api.auth import AuthAPI
+from addictune_sdk.api.channels import ChannelsAPI
+from addictune_sdk.client import AddictuneClient, Client
+from addictune_sdk.config import AddictuneSettings
+from addictune_sdk.exceptions import AddictuneAuthError
+from addictune_sdk.models.auth import AuthResponse
+from addictune_sdk.models.network import Network
+from addictune_sdk.network_client import NetworkClient
 
 
 @pytest.fixture
@@ -22,7 +21,7 @@ def settings():
 def patch_transport(mocker):
     """Patch RetryTransport so httpx.AsyncClient can close without real I/O."""
     mock_transport = AsyncMock()
-    mocker.patch("addictune.client.RetryTransport", return_value=mock_transport)
+    mocker.patch("addictune_sdk.client.RetryTransport", return_value=mock_transport)
     return mock_transport
 
 
@@ -37,7 +36,7 @@ async def test_login_returns_auth_response(
     )
 
     async with Client(settings=settings) as client:
-        result = await client.login("user@example.com", SecretStr("pass"))
+        result = await client.login("user@example.com", "pass")
 
     assert isinstance(result, AuthResponse)
     assert result.api_key.get_secret_value() == auth_payload["key"]
@@ -51,7 +50,7 @@ async def test_login_sets_session_key_header(
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
     async with Client(settings=settings) as client:
-        await client.login("user@example.com", SecretStr("pass"))
+        await client.login("user@example.com", "pass")
         assert client._http_client.headers.get("x-session-key") == auth_payload["key"]
 
 
@@ -61,7 +60,7 @@ async def test_login_sets_listen_key(mocker, settings, patch_transport, auth_pay
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
     async with Client(settings=settings) as client:
-        await client.login("user@example.com", SecretStr("pass"))
+        await client.login("user@example.com", "pass")
         assert client.listen_key == auth_payload["member"]["listen_key"]
 
 
@@ -73,7 +72,7 @@ async def test_login_sets_session_key_property(
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
     async with Client(settings=settings) as client:
-        await client.login("user@example.com", SecretStr("pass"))
+        await client.login("user@example.com", "pass")
         assert client.session_key == auth_payload["key"]
 
 
@@ -99,7 +98,7 @@ async def test_login_failure_raises_auth_error(mocker, settings, patch_transport
 
     async with Client(settings=settings) as client:
         with pytest.raises(AddictuneAuthError, match="bad credentials"):
-            await client.login("bad@example.com", SecretStr("wrong"))
+            await client.login("bad@example.com", "wrong")
 
 
 @pytest.mark.asyncio
@@ -169,7 +168,7 @@ async def test_network_unknown_slug_raises(settings, patch_transport):
 
 
 def test_default_settings_used_when_none_provided(mocker):
-    mocker.patch("addictune.client.RetryTransport", return_value=AsyncMock())
+    mocker.patch("addictune_sdk.client.RetryTransport", return_value=AsyncMock())
     client = Client()
     assert isinstance(client._settings, AddictuneSettings)
 
@@ -184,4 +183,4 @@ async def test_custom_networks(settings, patch_transport):
     async with Client(settings=settings, custom_networks=[custom]) as client:
         nc = client.network("custom")
         assert nc.network.name == "Custom"
-        assert nc.network.listen_base == "http://prem2.custom.fm:80"
+        assert nc.network.listen_base == "https://prem2.custom.fm"

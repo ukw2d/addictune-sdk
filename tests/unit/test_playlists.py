@@ -1,9 +1,13 @@
 import httpx
 import pytest
 
-from addictune.api.playlists import PlaylistsAPI
-from addictune.exceptions import AddictuneAPIError
-from addictune.models.playlist import Playlist, PlaylistTracks
+from addictune_sdk.api.playlists import PlaylistsAPI
+from addictune_sdk.exceptions import AddictuneAPIError
+from addictune_sdk.models.playlist import (
+    Playlist,
+    PlaylistListenHistoryEntry,
+    PlaylistTracks,
+)
 from tests.conftest import make_response
 
 # ── get_featured ─────────────────────────────────────────────────────
@@ -11,9 +15,9 @@ from tests.conftest import make_response
 
 @pytest.mark.asyncio
 async def test_get_featured_returns_playlists(mocker, playlists_featured_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
-    mocker.patch("addictune.api._helpers.cache.index_list")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlists_featured_payload)
@@ -39,9 +43,9 @@ async def test_get_featured_returns_playlists(mocker, playlists_featured_payload
 
 @pytest.mark.asyncio
 async def test_get_featured_uses_network_in_url(mocker, playlists_featured_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.set_etag")
-    mocker.patch("addictune.api._helpers.cache.index_list")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlists_featured_payload)
@@ -59,7 +63,7 @@ async def test_get_featured_uses_network_in_url(mocker, playlists_featured_paylo
 @pytest.mark.asyncio
 async def test_iter_playlists_returns_playlists(mocker, playlists_featured_payload):
     mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(playlists_featured_payload, 1),
     )
 
@@ -77,7 +81,7 @@ async def test_iter_playlists_returns_playlists(mocker, playlists_featured_paylo
 @pytest.mark.asyncio
 async def test_iter_playlists_passes_params(mocker, playlists_featured_payload):
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(playlists_featured_payload, 1),
     )
 
@@ -127,9 +131,9 @@ async def test_iter_playlists_rejects_zero_per_page(mocker):
 
 @pytest.mark.asyncio
 async def test_get_by_id_returns_playlist(mocker, playlist_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlist_payload)
@@ -149,9 +153,9 @@ async def test_get_by_id_returns_playlist(mocker, playlist_payload):
 
 @pytest.mark.asyncio
 async def test_get_by_id_uses_network_in_url(mocker, playlist_payload):
-    mocker.patch("addictune.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune.api._helpers.cache.get_indexed", return_value=None)
-    mocker.patch("addictune.api._helpers.cache.set_etag")
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlist_payload)
@@ -217,7 +221,7 @@ async def test_get_content_raises_on_error(mocker):
 @pytest.mark.asyncio
 async def test_iter_followed_returns_playlists(mocker, playlists_followed_payload):
     mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(playlists_followed_payload, 1),
     )
 
@@ -237,7 +241,7 @@ async def test_iter_followed_returns_playlists(mocker, playlists_followed_payloa
 @pytest.mark.asyncio
 async def test_iter_followed_uses_user_id_in_url(mocker, playlists_followed_payload):
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(playlists_followed_payload, 1),
     )
 
@@ -253,7 +257,7 @@ async def test_iter_followed_uses_user_id_in_url(mocker, playlists_followed_payl
 @pytest.mark.asyncio
 async def test_iter_followed_passes_params(mocker, playlists_followed_payload):
     mock_fetch = mocker.patch(
-        "addictune.api._helpers._fetch_page",
+        "addictune_sdk.api._helpers._fetch_page",
         return_value=(playlists_followed_payload, 1),
     )
 
@@ -294,8 +298,10 @@ async def test_get_listen_history_returns_entries(
     result = await api.get_listen_history(63662)
 
     assert len(result) == 1
-    assert result[0]["track"]["id"] == 3120758
-    assert result[0]["played_at"] == 1778081692
+    assert isinstance(result[0], PlaylistListenHistoryEntry)
+    assert result[0].track.id == 3120758
+    assert result[0].track.title == "Hypnotise"
+    assert result[0].played_at == 1778081692
     mock_client.get.assert_called_once_with(
         "/di/listen_history", params={"playlist_id": 63662}
     )
