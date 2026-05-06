@@ -1,0 +1,20 @@
+[
+  {
+    "track": {
+      "id": 3120758,
+      "length": 365,
+      "title": "Hypnotise",
+      "display_title": "Hypnotise",
+      "display_artist": "Little Foot, Bianca",
+      "mix": false,
+      "artists": [
+        { "id": 781225, "name": "Little Foot, Bianca" }
+      ],
+      "images": {
+        "default": "//cdn-images.audioaddict.com/a/5/7/e/e/f/a57eef6c8a57386ea59435155c671fdd.jpg{?size,height,width,quality,pad}"
+      },
+      "votes": { "up": 2, "down": 0 }
+    },
+    "played_at": 1778081692
+  }
+]

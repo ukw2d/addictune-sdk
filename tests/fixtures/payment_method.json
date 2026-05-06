@@ -1,0 +1,31 @@
+{
+  "id": 544029,
+  "active": true,
+  "address": "12D Makajonka street, ap.33",
+  "archived_at": null,
+  "city": "Minsk",
+  "country": "BY",
+  "description": "visa 6077",
+  "expires_at": "2029-01-31T23:59:59-05:00",
+  "first_name": "Uladzislau",
+  "gateway_country": "BY",
+  "ident_hash": "TYrUPWAfD3QEfBU4",
+  "iin": null,
+  "last_name": "Andreyeu",
+  "postal_code": "220114",
+  "state": "XX",
+  "external_account_id": "pm_1S14aN20TnlFixK9UOxxYlRg",
+  "external_client_id": "cus_SwyX9bl1IKDLtL",
+  "member_id": 13716939,
+  "payment_type_id": 13,
+  "payment_type": {
+    "id": 13,
+    "billable": true,
+    "indirect_billing": false,
+    "key": "stripe",
+    "label": "Credit Card",
+    "legacy": false,
+    "name": "stripe",
+    "require_address": true
+  }
+}

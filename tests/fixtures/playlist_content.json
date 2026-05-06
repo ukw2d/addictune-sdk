@@ -1,0 +1,36 @@
+{
+  "id": 63662,
+  "tracks": [
+    {
+      "id": 3113858,
+      "length": 464,
+      "title": "Right In Front Of Me (Daniel Testas Remix)",
+      "display_title": "Right In Front Of Me (Daniel Testas Remix)",
+      "display_artist": "Ritchie Hayden",
+      "mix": false,
+      "artists": [
+        { "id": 779840, "name": "Ritchie Hayden", "slug": "ritchie-hayden" }
+      ],
+      "images": {
+        "default": "//cdn-images.audioaddict.com/3/8/f/1/9/d/38f19d42eeadb84a9f4c0c9d0cd1d7bd.jpg{?size,height,width,quality,pad}"
+      },
+      "content": {
+        "length": 461.0,
+        "assets": [
+          {
+            "content_format_id": 1,
+            "content_quality_id": 6,
+            "size": 18731054,
+            "url": "//content.audioaddict.com/prd/3/c/1/1/f/track.mp3?purpose=playback"
+          }
+        ]
+      }
+    }
+  ],
+  "last_tracks": false,
+  "current_progress": {
+    "played_tracks": 1,
+    "remaining_tracks": 286,
+    "percent_complete": 0.0
+  }
+}

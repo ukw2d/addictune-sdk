@@ -1,0 +1,22 @@
+[
+  {
+    "id": 65974,
+    "name": "Melodic Progressive Vocals",
+    "slug": "melodic-progressive-vocals",
+    "description": "Sunny melodic tunes with progressive house beat and soothing vocals",
+    "images": {
+      "default": "//cdn-images.audioaddict.com/7/4/4/b/0/7/744b07f78768d43da16593dbc9f5c04d.png{?size,height,width,quality,pad}"
+    },
+    "tags": [
+      { "name": "Vocal", "id": 251 },
+      { "name": "Progressive", "id": 507 }
+    ],
+    "following": true,
+    "track_count": 241,
+    "play_count": 3379361,
+    "follow_count": 7847,
+    "length": 89963,
+    "duration": "2d 00h 59m",
+    "popularity": 0.9
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "id": 68656,
+  "name": "Top Vocal Trance Hits",
+  "slug": "top-vocal-trance-hits",
+  "description": "Recent top Vocal Trance tracks as voted by our listeners.",
+  "images": {
+    "default": "//cdn-images.audioaddict.com/2/6/9/6/f/d/2696fdef007a48c878ec466aaedfa1d2.png{?size,height,width,quality,pad}",
+    "square": "//cdn-images.audioaddict.com/e/f/1/a/3/9/ef1a39553e85e59ddd1a7000bda33fe3.png{?size,height,width,quality,pad}"
+  },
+  "tags": [
+    { "name": "Vocal Trance", "id": 358 },
+    { "name": "Trance", "id": 474 }
+  ],
+  "channel_id": null,
+  "following": true,
+  "track_count": 121,
+  "play_count": 3479482,
+  "follow_count": 8288,
+  "length": 44171,
+  "duration": "12h 16m",
+  "popularity": 0.96
+}

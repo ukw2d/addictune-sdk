@@ -11,6 +11,7 @@ from .channel import (
 from .common import ContentAsset, ImageSet, Votes
 from .mixshow import MixShow, ShowChannel, ShowEpisode, UpcomingEvent
 from .network import BUILTIN_NETWORKS, Network
+from .playlist import Playlist, PlaylistProgress, PlaylistTag, PlaylistTracks
 from .track import (
     Artist,
     AudioQuality,
@@ -21,6 +22,7 @@ from .track import (
     SkipEvent,
     Track,
 )
+from .user import PaymentMethod, PaymentType, Ping, PremiumStatus
 
 __all__ = [
     "Artist",
@@ -36,6 +38,14 @@ __all__ = [
     "LikedTrack",
     "MixShow",
     "Network",
+    "PaymentMethod",
+    "PaymentType",
+    "Playlist",
+    "PlaylistProgress",
+    "PlaylistTag",
+    "PlaylistTracks",
+    "Ping",
+    "PremiumStatus",
     "ShowChannel",
     "ShowEpisode",
     "SkipEvent",

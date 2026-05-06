@@ -1,6 +1,7 @@
 import httpx
 from pydantic import SecretStr
 
+from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, TracksAPI, UserAPI
 from .config import AddictuneSettings
 from .models.auth import AuthResponse
 from .models.network import BUILTIN_NETWORKS, Network
@@ -36,6 +37,9 @@ class Client:
 
         # Cache for NetworkClient instances — same slug always returns same object
         self._network_clients: dict[str, NetworkClient] = {}
+
+        # Client-level APIs (no network scope needed)
+        self.user = UserAPI(self._http_client)
 
     def network(self, slug: str) -> NetworkClient:
         """Return a scoped client for the given network slug.

@@ -124,3 +124,43 @@ def show_episodes_payload():
 @pytest.fixture
 def upcoming_episodes_payload():
     return load_fixture("upcoming_episodes.json")
+
+
+@pytest.fixture
+def playlists_featured_payload():
+    return load_fixture("playlists_featured.json")
+
+
+@pytest.fixture
+def playlist_payload():
+    return load_fixture("playlist.json")
+
+
+@pytest.fixture
+def playlist_content_payload():
+    return load_fixture("playlist_content.json")
+
+
+@pytest.fixture
+def playlists_followed_payload():
+    return load_fixture("playlists_followed.json")
+
+
+@pytest.fixture
+def playlist_listen_history_payload():
+    return load_fixture("playlist_listen_history.json")
+
+
+@pytest.fixture
+def ping_payload():
+    return load_fixture("ping.json")
+
+
+@pytest.fixture
+def payment_method_payload():
+    return load_fixture("payment_method.json")
+
+
+@pytest.fixture
+def premium_status_payload():
+    return load_fixture("premium_status.json")
