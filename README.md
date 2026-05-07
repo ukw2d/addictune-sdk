@@ -20,11 +20,12 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 - **Fully async** — built on `httpx` with `async/await` throughout
 - **6 networks** — DI.FM, RadioTunes, RockRadio, JazzRadio, ClassicalRadio, ZenRadio out of the box
 - **Typed models** — Pydantic v2 models for every API response, with IDE autocomplete and validation
-- **ETag caching** — automatic HTTP `If-None-Match` / `304` handling backed by `diskcache`
+- **ETag caching** — automatic HTTP `If-None-Match` / `304` handling backed by SQLite
 - **Auto-pagination** — `async for` iterators that transparently walk pages
 - **Resilient transport** — retry with exponential backoff + jitter, circuit breaker
 - **Auth helpers** — session and direct login, `SecretStr`-guarded internal storage
-- **Zero-config** — sensible defaults, override anything via env vars or `.env`
+- **Minimal dependencies** — only `httpx` and `pydantic`
+- **Zero-config** — sensible defaults, override via constructor, JSON file, or auto-discovery
 
 ### API coverage
 
@@ -217,33 +218,223 @@ Add custom networks via the `custom_networks` parameter on `Client`.
 
 ## Configuration
 
-Settings are loaded from environment variables (prefix `ADDICTUNE_`) or a `.env` file:
+The SDK uses a frozen dataclass (`AddictuneConfig`) with sensible defaults. Configuration is explicit and controlled entirely by the host application.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ADDICTUNE_API_BASE` | `https://api.audioaddict.com/v1` | API base URL |
-| `ADDICTUNE_NETWORK` | `di` | Default network slug |
-| `ADDICTUNE_TIMEOUT` | `30.0` | HTTP timeout (seconds) |
+`AddictuneConfig` is a plain Python `frozen=True` dataclass — every field has a default, so it works out of the box with zero setup. Override only what you need, using whichever approach fits your application.
 
-Transport resilience can also be tuned:
+There are four ways to configure the SDK, in order of precedence:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ADDICTUNE_RETRY__MAX_ATTEMPTS` | `3` | Max retry attempts |
-| `ADDICTUNE_RETRY__WAIT_MIN` | `2.0` | Minimum backoff (seconds) |
-| `ADDICTUNE_RETRY__WAIT_MAX` | `10.0` | Maximum backoff (seconds) |
-| `ADDICTUNE_CIRCUIT__FAILURE_THRESHOLD` | `5` | Failures before circuit opens |
-| `ADDICTUNE_CIRCUIT__RECOVERY_TIMEOUT` | `60.0` | Seconds before circuit half-opens |
+| Approach | When to use |
+|----------|-------------|
+| **No config** | Scripts, prototypes — defaults are production-ready |
+| **Programmatic** | Desktop apps with their own settings layer (QSettings, NSUserDefaults, etc.) |
+| **JSON file** | File-based settings, shared configs, deployment overrides |
+| **Auto-discovery** | Let the SDK find a config file in standard OS locations automatically |
 
-Or pass a configured `AddictuneSettings` / `TransportConfig` directly:
+### Defaults only
+
+No config object needed — every field ships with a sensible default:
 
 ```python
-from addictune_sdk import Client, AddictuneSettings
+from addictune_sdk import Client
 
-settings = AddictuneSettings(api_base="https://api.audioaddict.com/v1", timeout=10.0)
-async with Client(settings=settings) as client:
+async with Client() as client:
+    # Uses AddictuneConfig() under the hood:
+    #   api_base  = "https://api.audioaddict.com/v1"
+    #   network   = "di"
+    #   timeout   = 30.0
+    #   retry     = RetryConfig()   (3 attempts, exponential backoff)
+    #   circuit   = CircuitConfig() (5 failures → open, 60s recovery)
+    di = client.network("di")
+    channels = await di.channels.get_all()
+```
+
+### Programmatic override
+
+#### Override top-level fields
+
+Pass an `AddictuneConfig` to the `Client` constructor with just the fields you want to change:
+
+```python
+from addictune_sdk import Client, AddictuneConfig
+
+config = AddictuneConfig(
+    network="radiotunes",   # default to RadioTunes instead of DI.FM
+    timeout=15.0,           # shorter timeout for latency-sensitive apps
+)
+
+async with Client(config=config) as client:
+    # client.login() will authenticate against the "radiotunes" network
+    auth = await client.login("you@example.com", "password")
+```
+
+#### Override retry and circuit-breaker settings
+
+`AddictuneConfig` has two nested dataclasses — `RetryConfig` and `CircuitConfig` — that control resilient transport behaviour:
+
+```python
+from addictune_sdk import AddictuneConfig, RetryConfig, CircuitConfig
+
+config = AddictuneConfig(
+    retry=RetryConfig(
+        max_attempts=5,       # retry up to 5 times before giving up
+        wait_min=1.0,         # wait at least 1s between retries
+        wait_max=30.0,        # cap backoff at 30s
+        wait_jitter=2.0,      # add up to 2s random jitter
+    ),
+    circuit=CircuitConfig(
+        failure_threshold=10,  # tolerate more failures before tripping
+        recovery_timeout=30.0, # recover faster (30s instead of 60s)
+    ),
+)
+```
+
+**How retry works:** on each failed attempt the delay is `wait_multiplier × 2^(attempt-1)`, clamped to `[wait_min, wait_max]`, then a random jitter in `[0, wait_jitter]` is added. With defaults (multiplier `1.0`, min `2.0`, max `10.0`) the delays are approximately 2s → 4s → 8s plus jitter.
+
+**How the circuit breaker works:** consecutive failures are tracked. Once they reach `failure_threshold`, the circuit opens and all requests are immediately rejected. After `recovery_timeout` seconds the circuit closes and new requests are allowed through.
+
+#### Use `dataclasses.replace` for small tweaks
+
+If you only need to change one or two fields, use `dataclasses.replace` on the default instance:
+
+```python
+from dataclasses import replace
+from addictune_sdk import AddictuneConfig
+
+config = replace(AddictuneConfig(), timeout=10.0, network="jazzradio")
+```
+
+This is equivalent to `AddictuneConfig(timeout=10.0, network="jazzradio")` but reads more naturally when you're overriding a value you already have.
+
+### JSON config file
+
+Load config from a JSON file when your application prefers file-based settings:
+
+```python
+from addictune_sdk import Client, AddictuneConfig
+
+config = AddictuneConfig.from_json("~/.config/myapp/addictune.json")
+async with Client(config=config) as client:
     ...
 ```
+
+All fields are optional — missing keys fall back to their defaults, so your JSON only needs the overrides:
+
+```json
+{
+  "network": "di",
+  "timeout": 15.0
+}
+```
+
+Full example with every field:
+
+```json
+{
+  "api_base": "https://api.audioaddict.com/v1",
+  "network": "di",
+  "timeout": 30.0,
+  "retry": {
+    "max_attempts": 3,
+    "wait_multiplier": 1.0,
+    "wait_min": 2.0,
+    "wait_max": 10.0,
+    "wait_jitter": 1.0
+  },
+  "circuit": {
+    "failure_threshold": 5,
+    "recovery_timeout": 60.0
+  }
+}
+```
+
+#### Write a config file from code
+
+Persist settings for later use:
+
+```python
+from addictune_sdk import AddictuneConfig
+
+config = AddictuneConfig(timeout=15.0, network="rockradio")
+config.to_json("path/to/config.json")
+```
+
+`to_json` creates parent directories automatically if they don't exist.
+
+#### Round-trip: read → modify → write
+
+```python
+from addictune_sdk import AddictuneConfig
+
+# Load existing config
+config = AddictuneConfig.from_json("config.json")
+
+# Modify with dataclasses.replace
+from dataclasses import replace
+config = replace(config, timeout=20.0)
+
+# Save back
+config.to_json("config.json")
+```
+
+### Auto-discovery
+
+`load_config()` searches standard OS config locations in order and returns the first file it finds. If nothing exists, it returns a default `AddictuneConfig()` — so your code never needs to handle "no config found" as a special case.
+
+| Platform | Search paths (in order) |
+|----------|-------------------------|
+| Linux / macOS | `$XDG_CONFIG_HOME/addictune/config.json`, `~/.addictune/config.json` |
+| Windows | `%APPDATA%\addictune\config.json` |
+
+```python
+from addictune_sdk import Client, load_config
+
+# Searches standard paths; falls back to defaults if no file exists
+config = load_config()
+
+async with Client(config=config) as client:
+    ...
+```
+
+Pass an explicit path to skip auto-discovery:
+
+```python
+config = load_config("/etc/myapp/addictune.json")
+```
+
+### Configuration reference
+
+#### `AddictuneConfig`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `api_base` | `str` | `https://api.audioaddict.com/v1` | API base URL |
+| `network` | `str` | `di` | Default network slug used by `Client.login()` |
+| `timeout` | `float` | `30.0` | HTTP request timeout (seconds) |
+| `retry` | `RetryConfig` | `RetryConfig()` | Retry behaviour (see below) |
+| `circuit` | `CircuitConfig` | `CircuitConfig()` | Circuit-breaker behaviour (see below) |
+
+#### `RetryConfig`
+
+Controls automatic retry with exponential backoff + jitter.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_attempts` | `int` | `3` | Max attempts per request (including initial). Set to `1` to disable retries. |
+| `wait_multiplier` | `float` | `1.0` | Exponential backoff multiplier |
+| `wait_min` | `float` | `2.0` | Minimum delay between retries (seconds) |
+| `wait_max` | `float` | `10.0` | Maximum delay between retries (seconds) |
+| `wait_jitter` | `float` | `1.0` | Upper bound of random jitter added to each delay (seconds) |
+
+#### `CircuitConfig`
+
+Controls the circuit-breaker that protects against cascading failures.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `failure_threshold` | `int` | `5` | Consecutive failures before the circuit opens |
+| `recovery_timeout` | `float` | `60.0` | Seconds before a tripped circuit allows a retry |
+| `name` | `str \| None` | `None` | Optional label for logging / metrics |
 
 ---
 

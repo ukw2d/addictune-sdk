@@ -2,11 +2,11 @@ import httpx
 from pydantic import SecretStr
 
 from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, TracksAPI, UserAPI
-from .config import AddictuneSettings
+from .config import AddictuneConfig
 from .models.auth import AuthResponse
 from .models.network import BUILTIN_NETWORKS, Network
 from .network_client import NetworkClient
-from .transport import RetryTransport, TransportConfig
+from .transport import RetryTransport
 
 
 class Client:
@@ -28,10 +28,8 @@ class Client:
         session_key: Pre-existing session key (``X-Session-Key`` header).
             If provided, you can skip :meth:`login`.
         listen_key: Pre-existing listen key for stream URLs.
-        settings: Override default SDK settings (API base URL, timeout,
-            default network, etc.).  Falls back to environment variables
-            prefixed with ``ADDICTUNE_``.
-        transport_config: Retry and circuit-breaker configuration.
+        config: Override default SDK settings (API base URL, timeout,
+            default network, retry, circuit breaker, etc.).
         custom_networks: Additional :class:`Network` instances to
             register alongside the built-in ones.
     """
@@ -40,15 +38,14 @@ class Client:
         self,
         session_key: str | None = None,
         listen_key: str | None = None,
-        settings: AddictuneSettings | None = None,
-        transport_config: TransportConfig | None = None,
+        config: AddictuneConfig | None = None,
         custom_networks: list[Network] | None = None,
     ):
-        self._settings = settings or AddictuneSettings()
+        self._config = config or AddictuneConfig()
         self._http_client = httpx.AsyncClient(
-            base_url=self._settings.api_base,
-            timeout=self._settings.timeout,
-            transport=RetryTransport(transport_config),
+            base_url=self._config.api_base,
+            timeout=self._config.timeout,
+            transport=RetryTransport(self._config),
         )
         self._listen_key: SecretStr | None = (
             SecretStr(listen_key) if listen_key else None
@@ -94,7 +91,7 @@ class Client:
             raise ValueError(
                 f"Unknown network {slug!r}. "
                 f"Valid networks: {valid}. "
-                f"Add custom networks via AddictuneSettings.custom_networks."
+                f"Add custom networks via custom_networks."
             )
         if slug not in self._network_clients:
             self._network_clients[slug] = NetworkClient(
@@ -126,7 +123,7 @@ class Client:
             :class:`AuthResponse` containing ``user_id``, ``api_key``,
             and ``listen_key``.
         """
-        default = self.network(self._settings.network)
+        default = self.network(self._config.network)
         auth = await default.auth.login(email, password)
         raw_key = auth.api_key.get_secret_value()
         self._http_client.headers.update({"X-Session-Key": raw_key})

@@ -4,7 +4,7 @@ Run:
     ADDICTUNE_EMAIL=kromerx@gmail.com ADDICTUNE_PASSWORD=ukw2dDIFM \
       uv run python tests/integration/playlists.py
 
-Credentials can also be set in .env.  A cached session file is
+A cached session file is
 reused between script runs so login only happens once per 12 hours.
 """
 

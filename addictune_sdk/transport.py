@@ -1,92 +1,112 @@
+"""HTTP transport with retry and circuit breaker.
+
+Retry uses exponential backoff with jitter.  The circuit breaker tracks
+consecutive failures and short-circuits requests when open, recovering
+after a configurable timeout.
+"""
+
+from __future__ import annotations
+
+import asyncio
 import logging
+import time
 
 import httpx
-from circuitbreaker import circuit
 from httpx import AsyncHTTPTransport
-from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from tenacity import (
-    RetryCallState,
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-    wait_random,
-)
+
+from .config import AddictuneConfig
 
 logger = logging.getLogger(__name__)
 
-
-def _log_retry(retry_state: RetryCallState) -> None:
-    error = retry_state.outcome.exception() if retry_state.outcome else None
-    sleep = getattr(retry_state.next_action, "sleep", None)
-    logger.warning(
-        "Retry attempt %d failed with %s: %s%s",
-        retry_state.attempt_number,
-        type(error).__name__ if error else "Unknown",
-        error,
-        f", next in {sleep:.2f}s" if sleep is not None else "",
-    )
+_RETRYABLE = (httpx.ConnectError, httpx.ReadTimeout)
 
 
-class RetryConfig(BaseModel):
-    max_attempts: int = 3
-    wait_multiplier: float = 1.0
-    wait_min: float = 2.0
-    wait_max: float = 10.0
-    wait_jitter: float = 1.0
+class _CircuitBreaker:
+    """Simple circuit breaker: track failures, trip open, recover after timeout."""
 
+    def __init__(
+        self, failure_threshold: int = 5, recovery_timeout: float = 60.0
+    ) -> None:
+        self._failure_threshold = failure_threshold
+        self._recovery_timeout = recovery_timeout
+        self._failure_count = 0
+        self._last_failure_time: float = 0.0
+        self._open = False
 
-class CircuitConfig(BaseModel):
-    failure_threshold: int = 5
-    recovery_timeout: float = 60.0
-    name: str | None = None
+    def record_success(self) -> None:
+        self._failure_count = 0
+        self._open = False
 
+    def record_failure(self) -> None:
+        self._failure_count += 1
+        self._last_failure_time = time.monotonic()
+        if self._failure_count >= self._failure_threshold:
+            self._open = True
+            logger.warning(
+                "Circuit breaker tripped after %d failures", self._failure_count
+            )
 
-class TransportConfig(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ADDICTUNE_",
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_nested_delimiter="__",
-        extra="ignore",
-    )
-
-    retry: RetryConfig = Field(default_factory=RetryConfig)
-    circuit: CircuitConfig = Field(default_factory=CircuitConfig)
+    @property
+    def is_open(self) -> bool:
+        if not self._open:
+            return False
+        if time.monotonic() - self._last_failure_time >= self._recovery_timeout:
+            self._open = False
+            self._failure_count = 0
+            return False
+        return True
 
 
 class RetryTransport(AsyncHTTPTransport):
     """HTTP transport with retry (outer) -> circuit breaker (inner)."""
 
-    def __init__(self, config: TransportConfig | None = None):
+    def __init__(self, config: AddictuneConfig | None = None):
         super().__init__()
-        config = config or TransportConfig()
-        rc = config.retry
-        cc = config.circuit
-
-        self._protected_send = retry(
-            stop=stop_after_attempt(rc.max_attempts),
-            wait=wait_exponential(
-                multiplier=rc.wait_multiplier,
-                min=rc.wait_min,
-                max=rc.wait_max,
-            )
-            + wait_random(0, rc.wait_jitter),
-            retry=retry_if_exception_type((httpx.ConnectError, httpx.ReadTimeout)),
-            reraise=True,
-            before_sleep=_log_retry,
-        )(
-            circuit(
-                failure_threshold=cc.failure_threshold,
-                recovery_timeout=cc.recovery_timeout,
-                name=cc.name,
-            )(self._send_attempt)
+        config = config or AddictuneConfig()
+        self._rc = config.retry
+        self._cc = config.circuit
+        self._breaker = _CircuitBreaker(
+            failure_threshold=self._cc.failure_threshold,
+            recovery_timeout=self._cc.recovery_timeout,
         )
 
-    async def _send_attempt(
-        self, request: httpx.Request, body: bytes
-    ) -> httpx.Response:
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        body = await request.aread()
+        last_error: Exception | None = None
+
+        for attempt in range(1, self._rc.max_attempts + 1):
+            if self._breaker.is_open:
+                raise httpx.ConnectError("Circuit breaker is open")
+
+            try:
+                response = await self._send(request, body)
+                self._breaker.record_success()
+                return response
+            except _RETRYABLE as exc:
+                last_error = exc
+                self._breaker.record_failure()
+
+                if attempt < self._rc.max_attempts:
+                    wait = min(
+                        self._rc.wait_multiplier * (2 ** (attempt - 1)),
+                        self._rc.wait_max,
+                    )
+                    wait = max(wait, self._rc.wait_min)
+                    import random
+
+                    wait += random.uniform(0, self._rc.wait_jitter)
+                    logger.warning(
+                        "Retry attempt %d failed with %s: %s, next in %.2fs",
+                        attempt,
+                        type(exc).__name__,
+                        exc,
+                        wait,
+                    )
+                    await asyncio.sleep(wait)
+
+        raise last_error  # type: ignore[misc]
+
+    async def _send(self, request: httpx.Request, body: bytes) -> httpx.Response:
         return await AsyncHTTPTransport.handle_async_request(
             self,
             httpx.Request(
@@ -97,6 +117,3 @@ class RetryTransport(AsyncHTTPTransport):
                 content=body,
             ),
         )
-
-    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        return await self._protected_send(request, await request.aread())

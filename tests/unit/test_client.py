@@ -5,7 +5,7 @@ import pytest
 from addictune_sdk.api.auth import AuthAPI
 from addictune_sdk.api.channels import ChannelsAPI
 from addictune_sdk.client import AddictuneClient, Client
-from addictune_sdk.config import AddictuneSettings
+from addictune_sdk.config import AddictuneConfig
 from addictune_sdk.exceptions import AddictuneAuthError
 from addictune_sdk.models.auth import AuthResponse
 from addictune_sdk.models.network import Network
@@ -13,8 +13,8 @@ from addictune_sdk.network_client import NetworkClient
 
 
 @pytest.fixture
-def settings():
-    return AddictuneSettings(api_base="https://api.example.com/v1", network="di")
+def config():
+    return AddictuneConfig(api_base="https://api.example.com/v1", network="di")
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def patch_transport(mocker):
 
 @pytest.mark.asyncio
 async def test_login_returns_auth_response(
-    mocker, settings, patch_transport, auth_payload
+    mocker, config, patch_transport, auth_payload
 ):
     mocker.patch.object(
         AuthAPI,
@@ -35,7 +35,7 @@ async def test_login_returns_auth_response(
         return_value=AuthResponse.model_validate(auth_payload),
     )
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         result = await client.login("user@example.com", "pass")
 
     assert isinstance(result, AuthResponse)
@@ -44,105 +44,105 @@ async def test_login_returns_auth_response(
 
 @pytest.mark.asyncio
 async def test_login_sets_session_key_header(
-    mocker, settings, patch_transport, auth_payload
+    mocker, config, patch_transport, auth_payload
 ):
     auth = AuthResponse.model_validate(auth_payload)
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         await client.login("user@example.com", "pass")
         assert client._http_client.headers.get("x-session-key") == auth_payload["key"]
 
 
 @pytest.mark.asyncio
-async def test_login_sets_listen_key(mocker, settings, patch_transport, auth_payload):
+async def test_login_sets_listen_key(mocker, config, patch_transport, auth_payload):
     auth = AuthResponse.model_validate(auth_payload)
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         await client.login("user@example.com", "pass")
         assert client.listen_key == auth_payload["member"]["listen_key"]
 
 
 @pytest.mark.asyncio
 async def test_login_sets_session_key_property(
-    mocker, settings, patch_transport, auth_payload
+    mocker, config, patch_transport, auth_payload
 ):
     auth = AuthResponse.model_validate(auth_payload)
     mocker.patch.object(AuthAPI, "login", return_value=auth)
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         await client.login("user@example.com", "pass")
         assert client.session_key == auth_payload["key"]
 
 
 @pytest.mark.asyncio
-async def test_session_key_constructor_sets_header(settings, patch_transport):
-    async with Client(session_key="preloaded-key", settings=settings) as client:
+async def test_session_key_constructor_sets_header(config, patch_transport):
+    async with Client(session_key="preloaded-key", config=config) as client:
         assert client._http_client.headers.get("x-session-key") == "preloaded-key"
 
 
 @pytest.mark.asyncio
-async def test_listen_key_constructor(settings, patch_transport):
-    async with Client(listen_key="preloaded-listen-key", settings=settings) as client:
+async def test_listen_key_constructor(config, patch_transport):
+    async with Client(listen_key="preloaded-listen-key", config=config) as client:
         assert client.listen_key == "preloaded-listen-key"
 
 
 @pytest.mark.asyncio
-async def test_login_failure_raises_auth_error(mocker, settings, patch_transport):
+async def test_login_failure_raises_auth_error(mocker, config, patch_transport):
     mocker.patch.object(
         AuthAPI,
         "login",
         side_effect=AddictuneAuthError("bad credentials"),
     )
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         with pytest.raises(AddictuneAuthError, match="bad credentials"):
             await client.login("bad@example.com", "wrong")
 
 
 @pytest.mark.asyncio
-async def test_context_manager_closes_http_client(mocker, settings, patch_transport):
+async def test_context_manager_closes_http_client(mocker, config, patch_transport):
     mock_aclose = mocker.AsyncMock()
 
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         client._http_client.aclose = mock_aclose
 
     mock_aclose.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_network_returns_network_client(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_returns_network_client(config, patch_transport):
+    async with Client(config=config) as client:
         di = client.network("di")
         assert isinstance(di, NetworkClient)
 
 
 @pytest.mark.asyncio
-async def test_network_client_has_channels_api(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_client_has_channels_api(config, patch_transport):
+    async with Client(config=config) as client:
         di = client.network("di")
         assert isinstance(di.channels, ChannelsAPI)
 
 
 @pytest.mark.asyncio
-async def test_network_client_has_auth_api(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_client_has_auth_api(config, patch_transport):
+    async with Client(config=config) as client:
         di = client.network("di")
         assert isinstance(di.auth, AuthAPI)
 
 
 @pytest.mark.asyncio
-async def test_network_client_network_property(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_client_network_property(config, patch_transport):
+    async with Client(config=config) as client:
         di = client.network("di")
         assert di.network.slug == "di"
         assert di.network.name == "DI.FM"
 
 
 @pytest.mark.asyncio
-async def test_network_caches_same_instance(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_caches_same_instance(config, patch_transport):
+    async with Client(config=config) as client:
         di1 = client.network("di")
         di2 = client.network("di")
         assert di1 is di2
@@ -150,9 +150,9 @@ async def test_network_caches_same_instance(settings, patch_transport):
 
 @pytest.mark.asyncio
 async def test_network_different_slugs_return_different_instances(
-    settings, patch_transport
+    config, patch_transport
 ):
-    async with Client(settings=settings) as client:
+    async with Client(config=config) as client:
         di = client.network("di")
         rock = client.network("rockradio")
         assert di is not rock
@@ -161,16 +161,16 @@ async def test_network_different_slugs_return_different_instances(
 
 
 @pytest.mark.asyncio
-async def test_network_unknown_slug_raises(settings, patch_transport):
-    async with Client(settings=settings) as client:
+async def test_network_unknown_slug_raises(config, patch_transport):
+    async with Client(config=config) as client:
         with pytest.raises(ValueError, match="Unknown network 'unknown'"):
             client.network("unknown")
 
 
-def test_default_settings_used_when_none_provided(mocker):
+def test_default_config_used_when_none_provided(mocker):
     mocker.patch("addictune_sdk.client.RetryTransport", return_value=AsyncMock())
     client = Client()
-    assert isinstance(client._settings, AddictuneSettings)
+    assert isinstance(client._config, AddictuneConfig)
 
 
 def test_addictune_client_is_alias_for_client():
@@ -178,9 +178,9 @@ def test_addictune_client_is_alias_for_client():
 
 
 @pytest.mark.asyncio
-async def test_custom_networks(settings, patch_transport):
+async def test_custom_networks(config, patch_transport):
     custom = Network(slug="custom", name="Custom", listen_domain="custom.fm")
-    async with Client(settings=settings, custom_networks=[custom]) as client:
+    async with Client(config=config, custom_networks=[custom]) as client:
         nc = client.network("custom")
         assert nc.network.name == "Custom"
         assert nc.network.listen_base == "https://prem2.custom.fm"

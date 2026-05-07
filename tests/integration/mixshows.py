@@ -4,7 +4,7 @@ Run:
     uv run python tests/integration/mixshows.py
 
 Credentials are read from ADDICTUNE_EMAIL / ADDICTUNE_PASSWORD env vars
-(or from a .env file via AddictuneSettings).  A cached session file is
+A cached session file is
 reused between script runs so login only happens once per 12 hours.
 """
 
