@@ -183,4 +183,4 @@ async def test_custom_networks(config, patch_transport):
     async with Client(config=config, custom_networks=[custom]) as client:
         nc = client.network("custom")
         assert nc.network.name == "Custom"
-        assert nc.network.listen_base == "https://prem2.custom.fm"
+        assert nc.network.listen_host == "https://listen.custom.fm"

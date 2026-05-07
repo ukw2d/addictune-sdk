@@ -1,11 +1,11 @@
 """Channels integration tests against the live AudioAddict API.
 
 Run:
-    uv run python tests/integration/channels.py
+    ADDICTUNE_EMAIL=... ADDICTUNE_PASSWORD=... uv run python tests/integration/channels.py
 
-Credentials are read from ADDICTUNE_EMAIL / ADDICTUNE_PASSWORD env vars
-A cached session file is
-reused between script runs so login only happens once per 12 hours.
+Credentials are read from ADDICTUNE_EMAIL / ADDICTUNE_PASSWORD env vars.
+A cached session file is reused between script runs so login only
+happens once per 12 hours.
 
 Mutating tests (favorites) capture pre-mutation state and restore it,
 leaving your profile unchanged.
@@ -18,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import httpx
 from session import get_session
 
 from addictune_sdk import Client
@@ -73,17 +74,24 @@ async def get_currently_playing(di) -> None:
 
 
 async def get_stream_url(di, client) -> None:
-    url = di.channels.get_stream_url("trance", client.listen_key, quality="hi")
-    assert url.startswith("http://"), f"unexpected url: {url}"
-    assert "trance_hi" in url, f"channel key+suffix missing from url: {url}"
-    assert client.listen_key in url, f"listen key missing from url: {url}"
+    for quality in ("high", "medium", "low"):
+        url = di.channels.get_stream_url("trance", client.listen_key, quality=quality)
+        assert url.startswith("https://"), f"unexpected scheme: {url}"
+        assert "trance.pls" in url, f"channel key + .pls missing: {url}"
+        assert f"listen_key={client.listen_key}" in url, f"listen_key missing: {url}"
+
+        async with httpx.AsyncClient() as http:
+            resp = await http.get(url)
+            assert resp.status_code == 200, (
+                f"PLS fetch failed ({resp.status_code}): {url}"
+            )
+            assert "File1=" in resp.text, f"Not a valid PLS response: {url}"
 
 
 # ── Mutations (with rollback) ─────────────────────────────────────────
 
 
 async def add_remove_favorite(di, user_id) -> None:
-    # Pick a real channel that isn't already favorited
     channels = await di.channels.get_all()
     favorites = await di.channels.get_favorites(user_id)
     fav_ids = {f.channel_id for f in favorites}
@@ -104,7 +112,6 @@ async def add_remove_favorite(di, user_id) -> None:
     assert result is not None
     assert result.channel_id == channel_id
 
-    # rollback
     if was is None:
         await di.channels.remove_favorite(user_id, channel_id)
     else:

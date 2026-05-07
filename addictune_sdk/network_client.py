@@ -29,9 +29,7 @@ class NetworkClient:
         self._client = http_client
         self._network = network
         self.auth = AuthAPI(http_client, network.slug)
-        self.channels = ChannelsAPI(
-            http_client, network.slug, network.listen_base, network.stream_suffixes
-        )
+        self.channels = ChannelsAPI(http_client, network.slug, network.listen_host)
         self.mixshows = MixShowsAPI(http_client, network.slug)
         self.playlists = PlaylistsAPI(http_client, network.slug)
         self.tracks = TracksAPI(http_client, network.slug)

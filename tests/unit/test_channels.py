@@ -72,7 +72,9 @@ async def test_get_all_stores_etag_when_present(
 
 @pytest.mark.asyncio
 async def test_get_all_sends_if_none_match_when_etag_cached(mocker, channels_response):
-    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=('"abc123"', []))
+    mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag", return_value=('"abc123"', [])
+    )
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -480,80 +482,53 @@ async def test_get_favorite_handles_list_response(mocker):
 # ── get_stream_url ────────────────────────────────────────────────────
 
 
-def test_get_stream_url_di_hi(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="di",
-        listen_base="http://prem2.di.fm:80",
-        stream_suffixes={"hi": "_hi", "aac": ""},
-    )
+def _make_api(mocker, listen_host="https://listen.di.fm"):
+    return ChannelsAPI(mocker.AsyncMock(), network="di", listen_host=listen_host)
+
+
+def test_get_stream_url_high(mocker):
+    api = _make_api(mocker)
     assert (
-        api.get_stream_url("progressive", "abc123", quality="hi")
-        == "http://prem2.di.fm:80/progressive_hi?abc123"
+        api.get_stream_url("trance", "abc123", quality="high")
+        == "https://listen.di.fm/premium_high/trance.pls?listen_key=abc123"
     )
 
 
-def test_get_stream_url_di_aac(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="di",
-        listen_base="http://prem2.di.fm:80",
-        stream_suffixes={"hi": "_hi", "aac": ""},
-    )
+def test_get_stream_url_medium(mocker):
+    api = _make_api(mocker)
     assert (
-        api.get_stream_url("progressive", "abc123", quality="aac")
-        == "http://prem2.di.fm:80/progressive?abc123"
+        api.get_stream_url("trance", "abc123", quality="medium")
+        == "https://listen.di.fm/premium/trance.pls?listen_key=abc123"
     )
 
 
-def test_get_stream_url_rockradio_hi(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="rockradio",
-        listen_base="http://prem2.rockradio.com:80",
-        stream_suffixes={"hi": "", "aac": "_aac"},
-    )
+def test_get_stream_url_low(mocker):
+    api = _make_api(mocker)
     assert (
-        api.get_stream_url("classichardrock", "key99", quality="hi")
-        == "http://prem2.rockradio.com:80/classichardrock?key99"
+        api.get_stream_url("trance", "abc123", quality="low")
+        == "https://listen.di.fm/premium_medium/trance.pls?listen_key=abc123"
     )
 
 
-def test_get_stream_url_rockradio_aac(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="rockradio",
-        listen_base="http://prem2.rockradio.com:80",
-        stream_suffixes={"hi": "", "aac": "_aac"},
-    )
-    assert (
-        api.get_stream_url("classichardrock", "key99", quality="aac")
-        == "http://prem2.rockradio.com:80/classichardrock_aac?key99"
-    )
-
-
-def test_get_stream_url_default_quality_is_hi(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="di",
-        listen_base="http://prem2.di.fm:80",
-        stream_suffixes={"hi": "_hi", "aac": ""},
-    )
-    # Default quality is "hi"
+def test_get_stream_url_default_quality_is_high(mocker):
+    api = _make_api(mocker)
     assert (
         api.get_stream_url("trance", "abc123")
-        == "http://prem2.di.fm:80/trance_hi?abc123"
+        == "https://listen.di.fm/premium_high/trance.pls?listen_key=abc123"
     )
 
 
-def test_get_stream_url_unknown_quality_uses_empty_suffix(mocker):
-    api = ChannelsAPI(
-        mocker.AsyncMock(),
-        network="di",
-        listen_base="http://prem2.di.fm:80",
-        stream_suffixes={"hi": "_hi", "aac": ""},
-    )
+def test_get_stream_url_unknown_quality_falls_back_to_high(mocker):
+    api = _make_api(mocker)
     assert (
         api.get_stream_url("trance", "abc123", quality="unknown")
-        == "http://prem2.di.fm:80/trance?abc123"
+        == "https://listen.di.fm/premium_high/trance.pls?listen_key=abc123"
+    )
+
+
+def test_get_stream_url_different_network(mocker):
+    api = _make_api(mocker, listen_host="https://listen.rockradio.com")
+    assert (
+        api.get_stream_url("classichardrock", "key99", quality="high")
+        == "https://listen.rockradio.com/premium_high/classichardrock.pls?listen_key=key99"
     )

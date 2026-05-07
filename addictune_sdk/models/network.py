@@ -4,38 +4,36 @@ from __future__ import annotations
 
 from pydantic import BaseModel, model_validator
 
+STREAM_QUALITIES: dict[str, str] = {
+    "high": "premium_high",
+    "medium": "premium",
+    "low": "premium_medium",
+}
+
 
 class Network(BaseModel):
     """A single AudioAddict radio network.
-
-    Defines how API URLs and streaming URLs are constructed for a
-    given network (e.g. DI.FM, RockRadio).
 
     Attributes:
         slug: URL path segment used in API calls (e.g. ``"di"``, ``"rockradio"``).
         name: Human-readable display name (e.g. ``"DI.FM"``, ``"RockRadio"``).
         listen_domain: Domain used to construct stream URLs (e.g. ``"di.fm"``).
-        listen_base: Full streaming base URL.  If not provided, derived from
-            ``listen_domain`` as ``https://prem2.{listen_domain}``.
-        stream_suffixes: Mapping of quality key to channel key suffix for stream
-            URLs.  For example ``{"hi": "_hi", "aac": ""}`` means the ``hi``
-            quality appends ``_hi`` to the channel key while ``aac`` appends
-            nothing.  Defaults to ``{"hi": "_hi", "aac": ""}`` (DI.FM-style).
+        listen_host: Full streaming host.  If not provided, derived from
+            ``listen_domain`` as ``https://listen.{listen_domain}``.
     """
 
     slug: str
     name: str
     listen_domain: str
-    listen_base: str = ""
-    stream_suffixes: dict[str, str] = {"hi": "_hi", "aac": ""}
+    listen_host: str = ""
 
     model_config = {"frozen": True}
 
     @model_validator(mode="after")
-    def _derive_listen_base(self) -> Network:
-        if not self.listen_base:
+    def _derive_listen_host(self) -> Network:
+        if not self.listen_host:
             object.__setattr__(
-                self, "listen_base", f"https://prem2.{self.listen_domain}"
+                self, "listen_host", f"https://listen.{self.listen_domain}"
             )
         return self
 
@@ -45,12 +43,7 @@ class Network(BaseModel):
 BUILTIN_NETWORKS: list[Network] = [
     Network(slug="di", name="DI.FM", listen_domain="di.fm"),
     Network(slug="radiotunes", name="RadioTunes", listen_domain="radiotunes.com"),
-    Network(
-        slug="rockradio",
-        name="RockRadio",
-        listen_domain="rockradio.com",
-        stream_suffixes={"hi": "", "aac": "_aac"},
-    ),
+    Network(slug="rockradio", name="RockRadio", listen_domain="rockradio.com"),
     Network(slug="jazzradio", name="JazzRadio", listen_domain="jazzradio.com"),
     Network(
         slug="classicalradio",

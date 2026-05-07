@@ -10,6 +10,7 @@ from ..models.channel import (
     NowPlaying,
     TrackHistoryEntry,
 )
+from ..models.network import STREAM_QUALITIES
 from ..models.track import ChannelTracklist
 from ._helpers import cached_get_list, cached_get_object
 
@@ -28,13 +29,13 @@ class ChannelsAPI:
         self,
         client: httpx.AsyncClient,
         network: str = "di",
-        listen_base: str = "",
-        stream_suffixes: dict[str, str] | None = None,
+        listen_host: str = "",
+        stream_qualities: dict[str, str] | None = None,
     ):
         self._client = client
         self._network = network
-        self._listen_base = listen_base
-        self._stream_suffixes = stream_suffixes or {"hi": "_hi", "aac": ""}
+        self._listen_host = listen_host
+        self._stream_qualities = stream_qualities or STREAM_QUALITIES
 
     async def get_all(self) -> list[Channel]:
         """Return all channels on the network.
@@ -191,21 +192,20 @@ class ChannelsAPI:
         await raise_for_status(response)
 
     def get_stream_url(
-        self, channel_key: str, listen_key: str, quality: str = "hi"
+        self, channel_key: str, listen_key: str, quality: str = "high"
     ) -> str:
         """Return the direct stream URL for a channel.
 
-        Format: ``{listen_base}/{channel_key}{suffix}?{listen_key}``
+        Format: ``https://listen.{domain}/{quality_path}/{channel_key}.pls?listen_key={key}``
 
         Args:
             channel_key: The channel's key (e.g. ``"trance"``).
             listen_key: The authenticated user's listen key.
-            quality: Quality key matching the network's
-                ``stream_suffixes`` mapping (default ``"hi"``).
-                Common values: ``"hi"``, ``"aac"``.
+            quality: Quality tier — ``"high"`` (320k MP3), ``"medium"``
+                (128k AAC), or ``"low"`` (64k AAC).  Defaults to ``"high"``.
 
         Returns:
             A fully resolved streaming URL.
         """
-        suffix = self._stream_suffixes.get(quality, "")
-        return f"{self._listen_base}/{channel_key}{suffix}?{listen_key}"
+        quality_path = self._stream_qualities.get(quality, STREAM_QUALITIES["high"])
+        return f"{self._listen_host}/{quality_path}/{channel_key}.pls?listen_key={listen_key}"

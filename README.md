@@ -8,7 +8,7 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 
 [![PyPI version](https://img.shields.io/pypi/v/addictune-sdk?label=PyPI&color=blue)](https://pypi.org/project/addictune-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/addictune-sdk?label=Python&logo=python&logoColor=white)](https://pypi.org/project/addictune-sdk/)
-[![License](https://img.shields.io/pypi/l/addictune-sdk?label=License&color=green)](https://github.com/ukw2d/addictune-sdk/blob/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/addictune-sdk?label=License&color=green)](https://github.com/ukw2d/addictune-sdk/blob/master/LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/ukw2d/addictune-sdk/ci.yml?label=CI&logo=github)](https://github.com/ukw2d/addictune-sdk/actions)
 
 </div>
