@@ -42,29 +42,22 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 
 ## Installation
 
-=== "pip"
+```bash
+pip install addictune-sdk
+```
 
-    ```bash
-    pip install addictune-sdk
-    ```
+Or with other package managers:
 
-=== "uv"
+```bash
+# uv
+uv add addictune-sdk
 
-    ```bash
-    uv add addictune-sdk
-    ```
+# poetry
+poetry add addictune-sdk
 
-=== "poetry"
-
-    ```bash
-    poetry add addictune-sdk
-    ```
-
-=== "pipx" *(for scripts)*
-
-    ```bash
-    pipx inject my-tool addictune-sdk
-    ```
+# pipx (for scripts)
+pipx inject my-tool addictune-sdk
+```
 
 Requires **Python 3.12+**.
 
