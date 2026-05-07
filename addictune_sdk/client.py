@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 from pydantic import SecretStr
 
@@ -7,6 +9,8 @@ from .models.auth import AuthResponse
 from .models.network import BUILTIN_NETWORKS, Network
 from .network_client import NetworkClient
 from .transport import RetryTransport
+
+logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -67,6 +71,13 @@ class Client:
 
         # Client-level APIs (no network scope needed)
         self.user = UserAPI(self._http_client)
+
+        logger.debug(
+            "Client initialised (api_base=%s, network=%s, timeout=%.1fs)",
+            self._config.api_base,
+            self._config.network,
+            self._config.timeout,
+        )
 
     def network(self, slug: str) -> NetworkClient:
         """Return a scoped client for the given network slug.
@@ -129,10 +140,16 @@ class Client:
         self._http_client.headers.update({"X-Session-Key": raw_key})
         self._session_key = SecretStr(raw_key)
         self._listen_key = SecretStr(auth.listen_key.get_secret_value())
+        logger.info(
+            "Login successful (user_id=%s, network=%s)",
+            auth.user_id,
+            self._config.network,
+        )
         return auth
 
     async def close(self) -> None:
         """Close the underlying HTTP connection pool."""
+        logger.debug("Closing HTTP connection pool")
         await self._http_client.aclose()
 
     async def __aenter__(self):

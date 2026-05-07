@@ -12,6 +12,7 @@ directory or disable caching entirely.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,8 @@ _default_cache_dir = Path.home() / ".cache" / "addictune_sdk"
 _conn: sqlite3.Connection | None = None
 _cache_dir: Path = _default_cache_dir
 _enabled: bool = True
+
+logger = logging.getLogger(__name__)
 
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS etag_cache (
@@ -78,6 +81,9 @@ def configure(*, enabled: bool = True, cache_dir: str | Path | None = None) -> N
     if enabled:
         _cache_dir.mkdir(parents=True, exist_ok=True)
         _conn = _open_db()
+        logger.debug("Cache enabled at %s", _cache_dir / "cache.db")
+    else:
+        logger.debug("Cache disabled")
 
 
 def _get_conn() -> sqlite3.Connection | None:
@@ -96,6 +102,7 @@ def clear() -> None:
     if conn is not None:
         conn.execute("DELETE FROM etag_cache")
         conn.commit()
+        logger.debug("Cache cleared")
 
 
 def get_etag(url: str) -> tuple[str, Any] | tuple[None, None]:
@@ -112,8 +119,10 @@ def get_etag(url: str) -> tuple[str, Any] | tuple[None, None]:
     if exp is not None and exp < now:
         conn.execute(_DELETE_EXPIRED, (now,))
         conn.commit()
+        logger.debug("Cache expired: %s", url)
         return None, None
 
+    logger.debug("Cache hit: %s", url)
     entry = json.loads(value_json)
     return entry["etag"], entry["data"]
 
@@ -134,6 +143,7 @@ def set_etag(url: str, etag: str, data: Any, ttl: int | None = None) -> None:
     exp = (_now() + ttl) if ttl is not None else None
     conn.execute(_SET, (url, value, exp))
     conn.commit()
+    logger.debug("Cache stored: %s (ttl=%s)", url, ttl)
 
 
 def index_list(
@@ -159,6 +169,7 @@ def index_list(
         return
     conn.executemany(_SET, rows)
     conn.commit()
+    logger.debug("Cache indexed %d items under %s", len(rows), prefix)
 
 
 def get_indexed(key: str) -> dict[str, Any] | None:
@@ -174,4 +185,5 @@ def get_indexed(key: str) -> dict[str, Any] | None:
     value_json, exp = row
     if exp is not None and exp < now:
         return None
+    logger.debug("Cache index hit: %s", key)
     return json.loads(value_json)

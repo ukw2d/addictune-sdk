@@ -438,6 +438,60 @@ Controls the circuit-breaker that protects against cascading failures.
 
 ---
 
+## Logging
+
+The SDK uses Python's standard `logging` library under the `addictune_sdk` namespace. It does not configure handlers or formatters — that's the host application's responsibility. By default only `WARNING` and above is visible.
+
+### Quick setup
+
+The simplest way to see SDK log output:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+```
+
+### Target just the SDK
+
+To control SDK logging independently of the rest of your application:
+
+```python
+import logging
+
+logging.getLogger("addictune_sdk").setLevel(logging.DEBUG)
+```
+
+Or use a dedicated handler with a custom format:
+
+```python
+import logging
+
+handler = logging.StreamHandler()
+handler.setFormatter(
+    logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+)
+sdk_logger = logging.getLogger("addictune_sdk")
+sdk_logger.setLevel(logging.DEBUG)
+sdk_logger.addHandler(handler)
+```
+
+### Log levels by component
+
+| Component | `DEBUG` | `INFO` | `WARNING` | `ERROR` |
+|-----------|---------|--------|-----------|---------|
+| **Transport** (retry / circuit breaker) | Each retry attempt with wait time | Retry succeeded; circuit recovered | Circuit tripped open; request rejected by circuit | All attempts exhausted |
+| **Cache** (ETag / SQLite) | Cache hit, miss, expired, stored, indexed | — | — | — |
+| **Client** | Init, connection close | Successful login | — | — |
+
+**Recommended levels:**
+
+- **Production:** `WARNING` (default) — only circuit-breaker trips and exhausted retries
+- **Development:** `INFO` — adds login events and retry recoveries
+- **Debugging:** `DEBUG` — full visibility into cache behaviour and every retry attempt
+
+---
+
 ## License
 
 [MIT](LICENSE) © ukw2d
