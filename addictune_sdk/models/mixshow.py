@@ -8,7 +8,14 @@ from .common import ImageSet
 
 
 class ShowChannel(BaseModel):
-    """Minimal channel reference embedded in show data."""
+    """Minimal channel reference embedded in show data.
+
+    Attributes:
+        id: Channel identifier.
+        name: Channel display name.
+        key: URL-friendly channel key.
+        images: Channel artwork.
+    """
 
     id: int
     name: str
@@ -19,7 +26,15 @@ class ShowChannel(BaseModel):
 
 
 class UpcomingEvent(BaseModel):
-    """Lightweight upcoming event embedded in a MixShow."""
+    """Lightweight upcoming event embedded in a MixShow.
+
+    Attributes:
+        id: Event identifier.
+        name: Event name.
+        slug: URL-friendly slug.
+        start_at: ISO timestamp of when the event starts.
+        end_at: ISO timestamp of when the event ends.
+    """
 
     id: int
     name: str
@@ -31,7 +46,18 @@ class UpcomingEvent(BaseModel):
 
 
 class MixShow(BaseModel):
-    """A mix show (show series)."""
+    """A mix show (show series).
+
+    Attributes:
+        id: Show identifier.
+        name: Show display name.
+        slug: URL-friendly slug.
+        description: Show description.
+        active: Whether the show is currently active.
+        channels: Channels this show airs on.
+        upcoming_event: The next scheduled event, if any.
+        images: Show artwork.
+    """
 
     id: int
     name: str
@@ -55,7 +81,16 @@ class MixShow(BaseModel):
 
 
 class ShowEpisode(BaseModel):
-    """A single episode of a mix show."""
+    """A single episode of a mix show.
+
+    Attributes:
+        id: Episode identifier.
+        name: Episode display name.
+        free: Whether the episode is free to listen to.
+        start_at: ISO timestamp of when the episode starts.
+        end_at: ISO timestamp of when the episode ends.
+        show: The parent :class:`MixShow`, if embedded.
+    """
 
     id: int
     name: str

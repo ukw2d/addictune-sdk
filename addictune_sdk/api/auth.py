@@ -9,6 +9,11 @@ _APP_AUTH = httpx.BasicAuth("streams", "diradio")
 
 
 class AuthAPI:
+    """Authentication endpoints scoped to a single network.
+
+    Accessed via ``client.network("di").auth``.
+    """
+
     def __init__(self, client: httpx.AsyncClient, network: str = "di"):
         self._client = client
         self._network = network
@@ -19,12 +24,19 @@ class AuthAPI:
         password: str,
         mode: Literal["session", "direct"] = "session",
     ) -> AuthResponse:
-        """Login and return normalised credentials.
+        """Authenticate and return normalised credentials.
 
-        mode="session"  — POST /member_sessions with app Basic Auth.
-                          Returns a full-privilege session key (default).
-        mode="direct"   — POST /members/authenticate, no Basic Auth.
-                          Returns a read-only API key.
+        Args:
+            email: Account email address.
+            password: Account password.
+            mode: ``"session"`` creates a full-privilege session via
+                ``/member_sessions`` (default).  ``"direct"`` performs
+                a lighter ``/members/authenticate`` call that returns a
+                read-only API key.
+
+        Returns:
+            :class:`~addictune_sdk.models.auth.AuthResponse` with
+            ``user_id``, ``api_key``, and ``listen_key``.
         """
         if mode == "session":
             response = await self._client.post(

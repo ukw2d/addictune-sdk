@@ -8,6 +8,13 @@ from .common import ImageSet
 
 
 class PlaylistTag(BaseModel):
+    """A tag associated with a playlist.
+
+    Attributes:
+        id: Tag identifier.
+        name: Tag display name (e.g. ``"Chill"``, ``"Workout"``).
+    """
+
     id: int
     name: str
 
@@ -15,6 +22,19 @@ class PlaylistTag(BaseModel):
 
 
 class Playlist(BaseModel):
+    """A curated playlist on an AudioAddict network.
+
+    Attributes:
+        id: Playlist identifier.
+        name: Playlist display name.
+        slug: URL-friendly slug.
+        description: Playlist description.
+        track_count: Number of tracks in the playlist.
+        follow_count: Number of followers.
+        images: Playlist artwork.
+        tags: Tags associated with the playlist.
+    """
+
     id: int
     name: str
     slug: str | None = None
@@ -35,6 +55,14 @@ class Playlist(BaseModel):
 
 
 class PlaylistProgress(BaseModel):
+    """Playback progress for a playlist.
+
+    Attributes:
+        played_tracks: Number of tracks already played.
+        remaining_tracks: Number of tracks remaining.
+        percent_complete: Progress as a percentage (0–100).
+    """
+
     played_tracks: int
     remaining_tracks: int
     percent_complete: float
@@ -43,6 +71,15 @@ class PlaylistProgress(BaseModel):
 
 
 class PlaylistTracks(BaseModel):
+    """Playable track list returned when starting a playlist.
+
+    Attributes:
+        id: Playlist identifier.
+        tracks: The list of tracks in the playlist.
+        last_tracks: Recently played tracks.
+        current_progress: Playback progress information.
+    """
+
     id: int
     tracks: list[dict] = []
     last_tracks: list[dict] = []
@@ -62,6 +99,13 @@ class PlaylistTracks(BaseModel):
 
 
 class PlaylistListenHistoryEntry(BaseModel):
+    """A single entry from playlist listen history.
+
+    Attributes:
+        track: The track that was listened to.
+        played_at: Timestamp of when it played.
+    """
+
     track: Track
     played_at: int | str | None = None
 

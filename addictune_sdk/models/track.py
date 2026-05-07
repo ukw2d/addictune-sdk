@@ -6,6 +6,15 @@ from .common import ContentAsset, ImageSet, Votes
 
 
 class Artist(BaseModel):
+    """An artist associated with a track.
+
+    Attributes:
+        id: Artist identifier.
+        name: Artist display name.
+        slug: URL-friendly slug.
+        images: Artist artwork.
+    """
+
     id: int
     name: str
     slug: str | None = None
@@ -18,12 +27,19 @@ class Artist(BaseModel):
 class Track(ContentAsset):
     """A track returned by the API.
 
-    The API nests streamable assets under ``content.assets`` and track
-    length under ``content.length``.  The ``_hoist_content`` validator
-    flattens the first asset's fields (``content_format_id``,
-    ``content_quality_id``, ``size``, ``url``) directly onto the
-    Track (via ContentAsset inheritance), hoists ``content.length``,
-    and stores the full assets list at the top level.
+    Streamable assets nested under the API's ``content`` key are
+    automatically hoisted to the top level by the ``_hoist_content``
+    validator.
+
+    Attributes:
+        id: Track identifier.
+        title: Track title.
+        display_artist: Primary artist name for display.
+        length: Track duration in seconds.
+        artists: Full list of associated artists.
+        votes: Up/down vote counts.
+        images: Track artwork.
+        assets: All available streaming assets.
     """
 
     id: int
@@ -46,18 +62,6 @@ class Track(ContentAsset):
     @model_validator(mode="before")
     @classmethod
     def _hoist_content(cls, data: dict) -> dict:
-        """Flatten ``content`` dict into the top level.
-
-        The API nests streamable assets and other metadata under a
-        ``content`` key.  We:
-
-        1. Hoist ``content.length`` to ``length``.
-        2. Merge the first asset's fields (``content_format_id``,
-           ``content_quality_id``, ``size``, ``url``) into the top
-           level so they populate the ContentAsset base class fields.
-        3. Preserve the full ``content.assets`` list as ``assets``.
-        4. Top-level keys win on conflict.
-        """
         if not isinstance(data, dict):
             return data
 
@@ -65,30 +69,26 @@ class Track(ContentAsset):
         if not isinstance(content, dict):
             return data
 
-        # Hoist content-level fields (e.g. length)
         if "length" in content and "length" not in data:
             data["length"] = content["length"]
 
-        # Flatten the first asset's fields into the top level
         assets = content.get("assets", [])
         if assets and isinstance(assets, list):
             first_asset = assets[0]
             if isinstance(first_asset, dict):
-                # Asset fields are secondary — top-level wins on conflict
                 data = {**first_asset, **data}
 
-            # Store the full assets list at the top level
             data["assets"] = assets
 
         return data
 
 
 class LikedTrack(Track):
-    """Wraps a track returned from vote/liked-track endpoints.
+    """A track returned from vote/liked-track endpoints.
 
-    The API returns ``{up: bool, down: bool, track: {...}}``.
-    A ``model_validator`` flattens this into a plain :class:`Track`
-    with the vote flags merged in.
+    The API wraps the track in ``{up: bool, down: bool, track: {...}}``.
+    The ``_unwrap_nested_track`` validator flattens this into a plain
+    :class:`Track` with the vote flags merged in.
     """
 
     @model_validator(mode="before")
@@ -101,7 +101,16 @@ class LikedTrack(Track):
 
 
 class SkipEvent(BaseModel):
-    """Payload sent to the ``skip_events`` endpoint."""
+    """Payload sent to the ``skip_events`` endpoint.
+
+    Attributes:
+        track_id: The track that was skipped.
+        channel_id: Channel the track played on, if applicable.
+        playlist_id: Playlist the track played from, if applicable.
+        skipped_at: Unix timestamp of when the skip occurred.
+        length: Seconds into the track when it was skipped.
+        created_at: ISO timestamp (auto-set if not provided).
+    """
 
     track_id: int
     channel_id: int | None = None
@@ -122,6 +131,15 @@ class SkipEvent(BaseModel):
 
 
 class ChannelTracklist(BaseModel):
+    """The current routine/tracklist for a live channel.
+
+    Attributes:
+        routine_id: The routine identifier.
+        channel_id: The channel this routine belongs to.
+        expires_on: When the routine expires.
+        tracks: Ordered list of tracks in the routine.
+    """
+
     routine_id: int
     channel_id: int
     expires_on: str | None = None
@@ -131,6 +149,16 @@ class ChannelTracklist(BaseModel):
 
 
 class AudioFormat(BaseModel):
+    """An audio format (e.g. MP3, AAC).
+
+    Attributes:
+        id: Format identifier.
+        key: Machine-readable key (e.g. ``"mp3"``).
+        name: Human-readable name.
+        extension: File extension (e.g. ``".mp3"``).
+        mime_type: MIME type (e.g. ``"audio/mpeg"``).
+    """
+
     id: int
     key: str
     name: str
@@ -141,6 +169,15 @@ class AudioFormat(BaseModel):
 
 
 class AudioQualityDetail(BaseModel):
+    """Quality tier details (bitrate).
+
+    Attributes:
+        id: Quality detail identifier.
+        key: Machine-readable key.
+        name: Human-readable name.
+        kilo_bitrate: Bitrate in kbps.
+    """
+
     id: int
     key: str
     name: str
@@ -150,6 +187,18 @@ class AudioQualityDetail(BaseModel):
 
 
 class AudioQuality(BaseModel):
+    """An available audio quality tier on a network.
+
+    Attributes:
+        id: Quality tier identifier.
+        name: Human-readable name (e.g. ``"High"``).
+        key: Machine-readable key.
+        premium_only: Whether this quality requires a premium subscription.
+        default: Whether this is the default quality.
+        content_format: The audio format for this tier.
+        content_quality: The quality details (bitrate, etc.).
+    """
+
     id: int
     name: str
     position: int
@@ -163,6 +212,15 @@ class AudioQuality(BaseModel):
 
 
 class CurrentAudioQuality(BaseModel):
+    """The user's currently selected audio quality preference.
+
+    Attributes:
+        id: Preference record identifier.
+        network_id: The network this preference applies to.
+        member_id: The user's ID.
+        quality_id: The selected quality tier ID.
+    """
+
     id: int
     network_id: int
     member_id: int

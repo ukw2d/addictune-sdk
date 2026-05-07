@@ -1,7 +1,26 @@
+"""ETag-aware response header parser.
+
+Normalises HTTP response headers (ETag, Cache-Control, pagination)
+into a typed :class:`ResponseHeaders` model with a computed ``ttl``
+property used by the cache layer.
+"""
+
 from pydantic import BaseModel, model_validator
 
 
 class ResponseHeaders(BaseModel):
+    """Parsed HTTP response headers used for ETag caching and pagination.
+
+    Attributes:
+        etag: The ``ETag`` header value for conditional requests.
+        cache_control: The ``Cache-Control`` header value.
+        age: The ``Age`` header value in seconds.
+        paginate_page: Current page number (from ``paginate-page``).
+        paginate_pages: Total number of pages (from ``paginate-pages``).
+        paginate_records: Total number of records (from ``paginate-records``).
+        paginate_per_page: Items per page (from ``paginate-perpage``).
+    """
+
     etag: str | None = None
     cache_control: str | None = None
     age: int = 0
@@ -31,6 +50,12 @@ class ResponseHeaders(BaseModel):
 
     @property
     def ttl(self) -> int | None:
+        """Remaining TTL in seconds derived from ``Cache-Control: max-age``.
+
+        Computed as ``max-age - age``.  Returns ``None`` if no
+        ``max-age`` directive is present or if the remaining TTL
+        would be zero or negative.
+        """
         if not self.cache_control:
             return None
         for part in self.cache_control.split(","):

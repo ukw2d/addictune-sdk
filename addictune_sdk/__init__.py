@@ -1,3 +1,26 @@
+"""Addictune SDK — async Python client for the AudioAddict Radio API.
+
+Quick start::
+
+    from addictune_sdk import Client
+
+    async with Client() as client:
+        await client.login("user@example.com", "password")
+
+        di = client.network("di")
+        channels = await di.channels.get_all()
+
+The SDK targets AudioAddict-powered networks including DI.FM, RadioTunes,
+RockRadio, JazzRadio, ClassicalRadio, and ZenRadio.  Each network is
+accessed through a :class:`NetworkClient` obtained via
+:meth:`Client.network`.
+
+Supported networks are registered as built-ins (see
+:data:`~addictune_sdk.models.network.BUILTIN_NETWORKS`) and can be
+extended with custom :class:`Network` instances passed to the
+:class:`Client` constructor.
+"""
+
 from .client import AddictuneClient, Client
 from .config import AddictuneSettings
 from .exceptions import (

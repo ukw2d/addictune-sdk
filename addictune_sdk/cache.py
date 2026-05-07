@@ -1,3 +1,14 @@
+"""Disk-backed ETag cache for conditional HTTP requests.
+
+The cache stores ETags and response bodies so that subsequent requests
+for the same URL include an ``If-None-Match`` header, allowing the
+server to respond with ``304 Not Modified`` and save bandwidth.
+
+By default the cache is enabled and stored at
+``~/.cache/addictune_sdk``.  Use :func:`configure` to change the
+directory or disable caching entirely.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,6 +59,7 @@ def clear() -> None:
 
 
 def get_etag(url: str) -> tuple[str, Any] | tuple[None, None]:
+    """Return the cached ``(etag, data)`` for *url*, or ``(None, None)``."""
     c = _get_cache()
     if c is None:
         return None, None
@@ -58,6 +70,14 @@ def get_etag(url: str) -> tuple[str, Any] | tuple[None, None]:
 
 
 def set_etag(url: str, etag: str, data: Any, ttl: int | None = None) -> None:
+    """Store an ETag and its corresponding response data.
+
+    Args:
+        url: The request URL used as the cache key.
+        etag: The ETag header value.
+        data: The parsed response data to cache.
+        ttl: Optional time-to-live in seconds.
+    """
     c = _get_cache()
     if c is None:
         return

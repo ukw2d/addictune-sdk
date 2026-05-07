@@ -2,6 +2,14 @@ from pydantic import BaseModel, SecretStr, model_validator
 
 
 class AuthResponse(BaseModel):
+    """Credentials returned after a successful login.
+
+    Attributes:
+        user_id: The authenticated user's numeric ID.
+        api_key: Session key used in the ``X-Session-Key`` header.
+        listen_key: Key appended to stream URLs for authentication.
+    """
+
     user_id: int
     api_key: SecretStr  # X-Session-Key header
     listen_key: SecretStr  # stream URL query param

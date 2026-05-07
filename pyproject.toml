@@ -27,7 +27,7 @@ packages = ["addictune_sdk"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8",
-    "pytest-asyncio>=0.25",
+    "pytest>=9",
+    "pytest-asyncio>=1",
     "pytest-mock>=3.15.1",
 ]
