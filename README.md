@@ -495,3 +495,9 @@ sdk_logger.addHandler(handler)
 ## License
 
 [MIT](LICENSE) © ukw2d
+
+---
+
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or connected to AudioAddict Inc., Digitally Imported (DI.FM), RadioTunes, RockRadio, JazzRadio, ClassicalRadio, or ZenRadio. All trademarks belong to their respective owners.
