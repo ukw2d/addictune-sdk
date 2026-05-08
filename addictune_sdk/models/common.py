@@ -1,6 +1,17 @@
 """Shared models reused across multiple API domains."""
 
-from pydantic import BaseModel
+from typing import Annotated
+
+from pydantic import BaseModel, BeforeValidator
+
+
+def _ensure_scheme(url: str | None) -> str | None:
+    if url and url.startswith("//"):
+        return f"https:{url}"
+    return url
+
+
+AssetUrl = Annotated[str | None, BeforeValidator(_ensure_scheme)]
 
 
 class ImageSet(BaseModel):
@@ -48,6 +59,6 @@ class ContentAsset(BaseModel):
     content_format_id: int | None = None
     content_quality_id: int | None = None
     size: int | None = None
-    url: str | None = None
+    url: AssetUrl = None
 
     model_config = {"extra": "ignore"}

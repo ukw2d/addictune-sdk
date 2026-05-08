@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, model_validator
 
-from .common import ContentAsset, ImageSet, Votes
+from .common import AssetUrl, ContentAsset, ImageSet, Votes
 
 
 class Artist(BaseModel):
@@ -18,7 +18,7 @@ class Artist(BaseModel):
     id: int
     name: str
     slug: str | None = None
-    asset_url: str | None = None
+    asset_url: AssetUrl = None
     images: ImageSet | None = None
 
     model_config = {"extra": "ignore"}
@@ -53,7 +53,7 @@ class Track(ContentAsset):
     images: ImageSet | None = None
     assets: list[ContentAsset] = []
     is_show_asset: bool = False
-    asset_url: str | None = None
+    asset_url: AssetUrl = None
     up: bool = False
     down: bool = False
 
