@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, computed_field, model_validator
 
 from .common import AssetUrl, ContentAsset, ImageSet, Votes
 
@@ -130,6 +130,48 @@ class SkipEvent(BaseModel):
         return self
 
 
+class RoutineTrack(Track):
+    """A track within a channel routine/tracklist.
+
+    Extends :class:`Track` with playback position data from the
+    routine endpoint.  The ``offset`` field indicates how many seconds
+    into the track playback has progressed — a non-``None`` offset means
+    the track is currently playing; ``None`` means it is upcoming.
+
+    Attributes:
+        content_length: Precise track duration in seconds (float) from
+            the ``content.length`` field.
+        offset: Seconds elapsed in the current track.  ``None`` for
+            tracks that haven't started yet (upcoming tracks).
+    """
+
+    content_length: float | None = None
+    offset: int | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _extract_content_fields(cls, data: dict) -> dict:
+        if not isinstance(data, dict):
+            return data
+
+        content = data.get("content")
+        if not isinstance(content, dict):
+            return data
+
+        if "length" in content:
+            data["content_length"] = content["length"]
+        if "offset" in content:
+            data["offset"] = content["offset"]
+
+        return data
+
+    @computed_field
+    @property
+    def is_current(self) -> bool:
+        """``True`` if this track is currently playing."""
+        return self.offset is not None
+
+
 class ChannelTracklist(BaseModel):
     """The current routine/tracklist for a live channel.
 
@@ -143,7 +185,7 @@ class ChannelTracklist(BaseModel):
     routine_id: int
     channel_id: int
     expires_on: str | None = None
-    tracks: list[Track] = []
+    tracks: list[RoutineTrack] = []
 
     model_config = {"extra": "ignore"}
 

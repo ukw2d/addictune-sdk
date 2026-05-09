@@ -26,6 +26,7 @@ from .track import (
     ChannelTracklist,
     CurrentAudioQuality,
     LikedTrack,
+    RoutineTrack,
     SkipEvent,
     Track,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "PlaylistTracks",
     "Ping",
     "PremiumStatus",
+    "RoutineTrack",
     "ShowChannel",
     "ShowEpisode",
     "SkipEvent",
