@@ -113,7 +113,7 @@ class NowPlaying(BaseModel):
 
     channel_id: int
     channel_key: str
-    track: TrackHistoryEntry
+    track: TrackHistoryEntry | None = None
 
     model_config = {"extra": "ignore"}
 
