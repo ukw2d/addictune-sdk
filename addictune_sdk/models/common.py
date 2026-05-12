@@ -22,12 +22,12 @@ class ImageSet(BaseModel):
     be stripped or resolved by the consumer.
     """
 
-    default: str | None = None
-    compact: str | None = None
-    square: str | None = None
-    vertical: str | None = None
-    horizontal_banner: str | None = None
-    tall_banner: str | None = None
+    default: AssetUrl = None
+    compact: AssetUrl = None
+    square: AssetUrl = None
+    vertical: AssetUrl = None
+    horizontal_banner: AssetUrl = None
+    tall_banner: AssetUrl = None
 
     model_config = {"extra": "ignore"}
 

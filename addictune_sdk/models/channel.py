@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from .common import ImageSet, Votes
+from .common import AssetUrl, ImageSet, Votes
 
 
 class ChannelArtist(BaseModel):
@@ -15,7 +15,7 @@ class ChannelArtist(BaseModel):
 
     id: int
     name: str
-    asset_url: str | None = None
+    asset_url: AssetUrl = None
     images: ImageSet | None = None
 
     model_config = {"extra": "ignore"}
@@ -57,8 +57,8 @@ class Channel(BaseModel):
     description_long: str | None = None
     network_id: int
     premium_id: int | None = None
-    asset_url: str | None = None
-    banner_url: str | None = None
+    asset_url: AssetUrl = None
+    banner_url: AssetUrl = None
     channel_director: str | None = None
     artists: list[ChannelArtist] = []
     similar_channels: list[SimilarChannel] = []
@@ -96,7 +96,7 @@ class TrackHistoryEntry(BaseModel):
     started: int | None = None
     start_time: str | None = None
     votes: Votes | None = None
-    art_url: str | None = None
+    art_url: AssetUrl = None
     images: ImageSet | None = None
 
     model_config = {"extra": "ignore"}
