@@ -108,6 +108,8 @@ async def _fetch_page(
     response = await client.get(url, params=params, headers=headers)
 
     if response.status_code == 304 and cached_data is not None:
+        if unwrap_key and isinstance(cached_data, dict):
+            return cached_data.get(unwrap_key, cached_data), None
         return cached_data, None
 
     await raise_for_status(response)
