@@ -22,6 +22,7 @@ _default_cache_dir = Path.home() / ".cache" / "addictune_sdk"
 _conn: sqlite3.Connection | None = None
 _cache_dir: Path = _default_cache_dir
 _enabled: bool = True
+_default_ttl: int = 300
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,27 @@ def configure(*, enabled: bool = True, cache_dir: str | Path | None = None) -> N
         logger.debug("Cache enabled at %s", _cache_dir / "cache.db")
     else:
         logger.debug("Cache disabled")
+
+
+def set_default_ttl(ttl: int) -> None:
+    """Set the default TTL used when the server sends no usable TTL.
+
+    Applied when ``Cache-Control: max-age=0`` or no ``Cache-Control``
+    header is present.
+
+    Args:
+        ttl: Default time-to-live in seconds.
+    """
+    global _default_ttl
+    _default_ttl = ttl
+
+
+def resolve_ttl(server_ttl: int | None) -> int | None:
+    """Return the effective TTL, falling back to the default.
+
+    Returns *server_ttl* when available, otherwise :data:`_default_ttl`.
+    """
+    return server_ttl if server_ttl is not None else _default_ttl
 
 
 def _get_conn() -> sqlite3.Connection | None:

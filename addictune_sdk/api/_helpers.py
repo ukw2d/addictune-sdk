@@ -40,9 +40,10 @@ async def cached_get_list(
     rh = ResponseHeaders.model_validate(dict(response.headers))
 
     if rh.etag:
-        cache.set_etag(url, rh.etag, data, ttl=rh.ttl)
+        ttl = cache.resolve_ttl(rh.ttl)
+        cache.set_etag(url, rh.etag, data, ttl=ttl)
         if id_field:
-            cache.index_list(url, data, id_field=id_field, ttl=rh.ttl)
+            cache.index_list(url, data, id_field=id_field, ttl=ttl)
 
     return [model.model_validate(item) for item in data]
 
@@ -78,7 +79,7 @@ async def cached_get_object(
     rh = ResponseHeaders.model_validate(dict(response.headers))
 
     if rh.etag:
-        cache.set_etag(url, rh.etag, data, ttl=rh.ttl)
+        cache.set_etag(url, rh.etag, data, ttl=cache.resolve_ttl(rh.ttl))
 
     return model.model_validate(data)
 
@@ -119,7 +120,7 @@ async def _fetch_page(
     )
     rh = ResponseHeaders.model_validate(dict(response.headers))
     if rh.etag:
-        cache.set_etag(str(response.url), rh.etag, data, ttl=rh.ttl)
+        cache.set_etag(str(response.url), rh.etag, data, ttl=cache.resolve_ttl(rh.ttl))
     return items, rh.paginate_pages
 
 

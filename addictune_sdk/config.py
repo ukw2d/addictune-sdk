@@ -74,6 +74,9 @@ class AddictuneConfig:
         timeout: HTTP request timeout in seconds.
         retry: :class:`RetryConfig` for automatic retry behaviour.
         circuit: :class:`CircuitConfig` for circuit-breaker protection.
+        default_cache_ttl: Fallback TTL (seconds) for ETag cache entries
+            when the server sends ``max-age=0`` or no ``Cache-Control``.
+            Prevents entries from being stored indefinitely.
     """
 
     api_base: str = "https://api.audioaddict.com/v1"
@@ -81,6 +84,7 @@ class AddictuneConfig:
     timeout: float = 30.0
     retry: RetryConfig = field(default_factory=RetryConfig)
     circuit: CircuitConfig = field(default_factory=CircuitConfig)
+    default_cache_ttl: int = 300
 
     @classmethod
     def from_json(cls, path: str | Path) -> AddictuneConfig:

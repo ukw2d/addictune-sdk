@@ -4,6 +4,7 @@ import httpx
 from pydantic import SecretStr
 
 from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, TracksAPI, UserAPI
+from . import cache
 from .config import AddictuneConfig
 from .models.auth import AuthResponse
 from .models.network import BUILTIN_NETWORKS, Network
@@ -71,6 +72,9 @@ class Client:
 
         # Client-level APIs (no network scope needed)
         self.user = UserAPI(self._http_client)
+
+        # Propagate default cache TTL
+        cache.set_default_ttl(self._config.default_cache_ttl)
 
         logger.debug(
             "Client initialised (api_base=%s, network=%s, timeout=%.1fs)",
