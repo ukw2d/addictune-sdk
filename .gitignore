@@ -8,3 +8,8 @@ dist/
 *.egg-info/
 .uv/
 tests/integration/.session_cache.json
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key

@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "addictune_sdk",
+  "project_id": "29764284-b6ee-4a61-8675-aea5beaf498e"
+}
