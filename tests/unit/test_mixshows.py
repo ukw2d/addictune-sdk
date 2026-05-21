@@ -169,6 +169,11 @@ async def test_get_upcoming_returns_episodes(mocker, upcoming_episodes_payload):
     assert all(isinstance(ep, ShowEpisode) for ep in result)
     assert result[0].id == 801
     assert result[0].name == "Upcoming Show Episode 1"
+    assert result[0].show_id == 123
+    assert result[0].duration == 3600
+    assert result[0].subtitle == "Live from the studio"
+    assert result[0].artists_tagline == "Artist One, Artist Two"
+    assert result[0].description_html == "<p>Episode details</p>"
     assert result[0].free is True
     assert result[1].id == 802
     assert result[1].free is False

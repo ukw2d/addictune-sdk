@@ -1,1 +1,2 @@
 {"id":"int-41e3b32d","kind":"field_change","created_at":"2026-05-17T11:34:58.16271636Z","actor":"ukw2d","issue_id":"addictune-sdk-bmm","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Completed"}}
+{"id":"int-3e90ad76","kind":"field_change","created_at":"2026-05-21T12:07:26.778329949Z","actor":"ukw2d","issue_id":"addictune-sdk-obk","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Added missing ShowEpisode fields and test coverage."}}

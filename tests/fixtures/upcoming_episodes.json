@@ -2,6 +2,11 @@
   {
     "id": 801,
     "name": "Upcoming Show Episode 1",
+    "show_id": 123,
+    "duration": 3600,
+    "subtitle": "Live from the studio",
+    "artists_tagline": "Artist One, Artist Two",
+    "description_html": "<p>Episode details</p>",
     "free": true,
     "start_at": "2024-01-20T18:00:00Z",
     "end_at": "2024-01-20T19:00:00Z",

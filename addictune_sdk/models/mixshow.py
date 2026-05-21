@@ -86,6 +86,11 @@ class ShowEpisode(BaseModel):
     Attributes:
         id: Episode identifier.
         name: Episode display name.
+        show_id: Parent show identifier.
+        duration: Episode duration in seconds.
+        subtitle: Episode subtitle.
+        artists_tagline: Display tagline for episode artists.
+        description_html: HTML episode description.
         free: Whether the episode is free to listen to.
         start_at: ISO timestamp of when the episode starts.
         end_at: ISO timestamp of when the episode ends.
@@ -94,6 +99,11 @@ class ShowEpisode(BaseModel):
 
     id: int
     name: str
+    show_id: int | None = None
+    duration: int | None = None
+    subtitle: str | None = None
+    artists_tagline: str | None = None
+    description_html: str | None = None
     free: bool = False
     start_at: str | None = None
     end_at: str | None = None
