@@ -9,6 +9,7 @@ from addictune_sdk.exceptions import (
 )
 from addictune_sdk.models.channel import (
     Channel,
+    ChannelFilter,
     LikedChannelID,
     ListenHistoryEntry,
     NowPlaying,
@@ -205,6 +206,78 @@ async def test_get_by_id_uses_etag_cache(mocker, channel_payload):
     assert result.key == "trance"
     call_headers = mock_client.get.call_args[1]["headers"]
     assert call_headers["If-None-Match"] == '"v1"'
+
+
+# ── get_filter ───────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_filter_returns_channel_filter(mocker, channel_filter_payload):
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, channel_filter_payload)
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_filter("popular")
+
+    assert isinstance(result, ChannelFilter)
+    assert result.key == "popular"
+    assert result.name == "Popular"
+    assert [channel.key for channel in result.channels] == ["trance", "house"]
+    assert all(isinstance(channel, Channel) for channel in result.channels)
+    mock_client.get.assert_called_once_with(
+        "/di/channel_filters/key/popular", headers={}
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_filter_uses_network_in_url(mocker, channel_filter_payload):
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, channel_filter_payload)
+
+    api = ChannelsAPI(mock_client, network="rockradio")
+    await api.get_filter("popular")
+
+    mock_client.get.assert_called_once_with(
+        "/rockradio/channel_filters/key/popular", headers={}
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_filter_uses_etag_cache(mocker, channel_filter_payload):
+    mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag",
+        return_value=('"filter1"', channel_filter_payload),
+    )
+    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(304)
+
+    api = ChannelsAPI(mock_client, network="di")
+    result = await api.get_filter("popular")
+
+    assert result.key == "popular"
+    assert result.channels[0].key == "trance"
+    call_headers = mock_client.get.call_args[1]["headers"]
+    assert call_headers["If-None-Match"] == '"filter1"'
+
+
+@pytest.mark.asyncio
+async def test_get_filter_raises_not_found(mocker):
+    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(404, text="Not Found")
+
+    api = ChannelsAPI(mock_client, network="di")
+    with pytest.raises(AddictuneNotFoundError):
+        await api.get_filter("missing")
 
 
 # ── get_track_history ────────────────────────────────────────────────

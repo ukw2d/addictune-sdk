@@ -5,6 +5,7 @@ import httpx
 from ..exceptions import raise_for_status
 from ..models.channel import (
     Channel,
+    ChannelFilter,
     LikedChannelID,
     ListenHistoryEntry,
     NowPlaying,
@@ -58,6 +59,18 @@ class ChannelsAPI:
             f"/{self._network}/channels/{channel_id}",
             Channel,
             index_key=f"/{self._network}/channels/id={channel_id}",
+        )
+
+    async def get_filter(self, key: str) -> ChannelFilter:
+        """Return a channel filter by key.
+
+        Args:
+            key: Channel filter key, e.g. ``"popular"``.
+        """
+        return await cached_get_object(
+            self._client,
+            f"/{self._network}/channel_filters/key/{key}",
+            ChannelFilter,
         )
 
     async def get_track_history(self, channel_id: int) -> list[TrackHistoryEntry]:

@@ -2,6 +2,7 @@ from .auth import AuthResponse
 from .channel import (
     Channel,
     ChannelArtist,
+    ChannelFilter,
     LikedChannelID,
     ListenHistoryEntry,
     NowPlaying,
@@ -41,6 +42,7 @@ __all__ = [
     "BUILTIN_NETWORKS",
     "Channel",
     "ChannelArtist",
+    "ChannelFilter",
     "ChannelTracklist",
     "AssetUrl",
     "ContentAsset",

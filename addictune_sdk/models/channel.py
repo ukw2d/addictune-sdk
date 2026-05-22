@@ -71,6 +71,35 @@ class Channel(BaseModel):
     model_config = {"extra": "ignore"}
 
 
+class ChannelFilter(BaseModel):
+    """A channel filter/grouping returned by the channel_filters endpoint.
+
+    Attributes:
+        id: Numeric channel filter identifier.
+        key: URL-friendly filter key (e.g. ``"popular"``).
+        name: Human-readable filter name.
+        channels: Channels included in this filter, in API-provided order.
+    """
+
+    id: int
+    key: str
+    name: str
+    network_id: int
+    description_text: str | None = None
+    description_title: str | None = None
+    display: bool | None = None
+    display_description: bool | None = None
+    genre: bool | None = None
+    meta: bool | None = None
+    position: int | None = None
+    images: ImageSet | None = None
+    channels: list[Channel] = []
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    model_config = {"extra": "ignore"}
+
+
 class TrackHistoryEntry(BaseModel):
     """Track as returned by track_history and currently_playing endpoints.
 

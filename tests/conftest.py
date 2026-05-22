@@ -53,6 +53,27 @@ def channels_list(channel_payload, channel_payload_minimal):
 
 
 @pytest.fixture
+def channel_filter_payload(channels_list):
+    return {
+        "id": 89,
+        "description_text": "",
+        "description_title": "",
+        "display": True,
+        "display_description": False,
+        "genre": False,
+        "key": "popular",
+        "meta": True,
+        "name": "Popular",
+        "position": 1,
+        "network_id": 1,
+        "created_at": None,
+        "updated_at": "2024-02-21T10:00:42-05:00",
+        "images": {},
+        "channels": channels_list,
+    }
+
+
+@pytest.fixture
 def auth_response(auth_payload):
     return make_response(200, auth_payload)
 
