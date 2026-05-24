@@ -35,7 +35,7 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 | **Channels** | Browse all channels, get by ID, track history, now playing, stream URLs, favorites |
 | **Tracks**   | Get by ID, liked tracks, vote up/down/delete, skip events, audio quality prefs   |
 | **Playlists**| Featured playlists, browse by popularity/newest, get tracks, follow, listen history |
-| **Mix Shows**| Browse shows, iterate episodes, upcoming events, followed shows                  |
+| **Mix Shows**| Browse shows, iterate episodes, upcoming events, follow/unfollow shows           |
 | **User**     | Ping API, check premium status, payment methods                                  |
 
 ---
@@ -178,6 +178,10 @@ async for ep in di.mixshows.iter_episodes(show_id):
 
 # Upcoming events
 upcoming = await di.mixshows.get_upcoming(limit=10)
+
+# Follow or unfollow a show
+await di.mixshows.follow(user_id, show_id)
+await di.mixshows.unfollow(user_id, show_id)
 ```
 
 ### User

@@ -140,3 +140,25 @@ class MixShowsAPI:
             start_page=start_page,
             end_page=end_page,
         )
+
+    async def follow(self, user_id: int, show_id: int) -> None:
+        """Follow a mix show for the authenticated user.
+
+        Args:
+            user_id: The authenticated user's ID.
+            show_id: The show to follow.
+        """
+        url = f"/{self._network}/members/{user_id}/followed_items/show/{show_id}"
+        response = await self._client.post(url)
+        await raise_for_status(response)
+
+    async def unfollow(self, user_id: int, show_id: int) -> None:
+        """Stop following a mix show for the authenticated user.
+
+        Args:
+            user_id: The authenticated user's ID.
+            show_id: The show to unfollow.
+        """
+        url = f"/{self._network}/members/{user_id}/followed_items/show/{show_id}"
+        response = await self._client.delete(url)
+        await raise_for_status(response)

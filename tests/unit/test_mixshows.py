@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from addictune_sdk.api.mixshows import MixShowsAPI
-from addictune_sdk.exceptions import AddictuneAPIError
+from addictune_sdk.exceptions import AddictuneAPIError, AddictuneNotFoundError
 from addictune_sdk.models.mixshow import MixShow, ShowEpisode
 from tests.conftest import make_response
 
@@ -267,3 +267,57 @@ async def test_iter_followed_passes_active_param(mocker, mixshows_list_payload):
 
     call_params = mock_fetch.call_args[1]["params"]
     assert call_params["active"] == "false"
+
+
+# ── follow ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_follow_succeeds(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.post.return_value = make_response(201, None, text="null")
+
+    api = MixShowsAPI(mock_client, network="di")
+    result = await api.follow(user_id=13716939, show_id=13765)
+
+    assert result is None
+    mock_client.post.assert_called_once_with(
+        "/di/members/13716939/followed_items/show/13765"
+    )
+
+
+@pytest.mark.asyncio
+async def test_follow_raises_on_error(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.post.return_value = make_response(500, text="Internal Server Error")
+
+    api = MixShowsAPI(mock_client, network="di")
+    with pytest.raises(AddictuneAPIError):
+        await api.follow(user_id=13716939, show_id=13765)
+
+
+# ── unfollow ─────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_unfollow_succeeds(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.delete.return_value = make_response(204)
+
+    api = MixShowsAPI(mock_client, network="di")
+    result = await api.unfollow(user_id=13716939, show_id=13765)
+
+    assert result is None
+    mock_client.delete.assert_called_once_with(
+        "/di/members/13716939/followed_items/show/13765"
+    )
+
+
+@pytest.mark.asyncio
+async def test_unfollow_raises_on_error(mocker):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.delete.return_value = make_response(404, text="Not Found")
+
+    api = MixShowsAPI(mock_client, network="di")
+    with pytest.raises(AddictuneNotFoundError):
+        await api.unfollow(user_id=13716939, show_id=99999)
