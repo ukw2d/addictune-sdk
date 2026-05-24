@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from addictune_sdk.api._helpers import cached_get_list, cached_get_object
+from addictune_sdk.api._helpers import cached_get_list, cached_get_object, paginate
 from addictune_sdk.models.channel import Channel, LikedChannelID
 from tests.conftest import make_response
 
@@ -176,3 +176,61 @@ async def test_cached_get_object_falls_back_when_index_miss(mocker):
 
     assert result.key == "trance"
     mock_client.get.assert_called_once()
+
+
+# ── pagination duplicate handling ───────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_paginate_stops_after_completely_repeated_page(mocker):
+    first_page = [
+        {"id": 1, "key": "trance", "name": "Trance", "network_id": 1},
+        {"id": 2, "key": "house", "name": "House", "network_id": 1},
+    ]
+    third_page = [{"id": 3, "key": "ambient", "name": "Ambient", "network_id": 1}]
+    mock_fetch = mocker.patch(
+        "addictune_sdk.api._helpers._fetch_page",
+        side_effect=[(first_page, None), (first_page, None), (third_page, None)],
+    )
+
+    result = [
+        channel
+        async for channel in paginate(
+            mocker.AsyncMock(spec=httpx.AsyncClient),
+            "/di/channels",
+            Channel,
+            per_page=2,
+        )
+    ]
+
+    assert [channel.id for channel in result] == [1, 2]
+    assert mock_fetch.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_paginate_skips_overlap_and_continues_with_new_items(mocker):
+    first_page = [
+        {"id": 1, "key": "trance", "name": "Trance", "network_id": 1},
+        {"id": 2, "key": "house", "name": "House", "network_id": 1},
+    ]
+    second_page = [
+        {"id": 2, "key": "house", "name": "House", "network_id": 1},
+        {"id": 3, "key": "ambient", "name": "Ambient", "network_id": 1},
+    ]
+    mock_fetch = mocker.patch(
+        "addictune_sdk.api._helpers._fetch_page",
+        side_effect=[(first_page, 2), (second_page, 2)],
+    )
+
+    result = [
+        channel
+        async for channel in paginate(
+            mocker.AsyncMock(spec=httpx.AsyncClient),
+            "/di/channels",
+            Channel,
+            per_page=2,
+        )
+    ]
+
+    assert [channel.id for channel in result] == [1, 2, 3]
+    assert mock_fetch.call_count == 2

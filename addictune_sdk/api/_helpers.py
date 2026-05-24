@@ -142,10 +142,15 @@ async def paginate(
 
     If *unwrap_key* is given, extracts the item list from that key
     in the response dict (e.g. ``"results"`` for envelope responses).
+
+    Models with an ``id`` field are yielded once per iteration.  This
+    prevents an endpoint that repeats a page from returning duplicate
+    entities indefinitely.
     """
     base_params = dict(params or {})
     base_params["per_page"] = per_page
     page = start_page
+    seen_ids: set[object] = set()
 
     while True:
         base_params["page"] = page
@@ -156,14 +161,24 @@ async def paginate(
             unwrap_key=unwrap_key,
         )
 
+        new_items = 0
         for item in items:
-            yield model.model_validate(item)
+            validated = model.model_validate(item)
+            item_id = getattr(validated, "id", None)
+            if item_id is not None:
+                if item_id in seen_ids:
+                    continue
+                seen_ids.add(item_id)
+            new_items += 1
+            yield validated
 
         if end_page is not None and page >= end_page:
             break
         if total_pages is not None and page >= total_pages:
             break
         if len(items) < per_page:
+            break
+        if items and new_items == 0:
             break
 
         page += 1
