@@ -54,6 +54,9 @@ class MixShow(BaseModel):
         slug: URL-friendly slug.
         description: Show description.
         active: Whether the show is currently active.
+        follows_count: Follow count returned by the show-browser listing.
+        channel_ids: Channel identifiers returned by show-browser listings.
+        channel_filter_ids: Channel-filter identifiers returned by listings.
         channels: Channels this show airs on.
         upcoming_event: The next scheduled event, if any.
         images: Show artwork.
@@ -65,6 +68,10 @@ class MixShow(BaseModel):
     description: str | None = None
     duration: int | None = None
     active: bool = False
+    follows_count: int | None = None
+    channel_ids: list[int] = []
+    channel_filter_ids: list[int] = []
+    artists_tagline: str | None = None
     human_readable_schedule: list[str] = []
     next_start_at: str | None = None
     next_end_at: str | None = None

@@ -180,6 +180,10 @@ async for pl in di.playlists.iter_followed(user_id):
 async for show in di.mixshows.iter_shows(active=True):
     print(show.name)
 
+# Browse the website's popular ordering (active shows, then follow count)
+async for show in di.mixshows.iter_popular():
+    print(show.name, show.follows_count)
+
 # Episodes for a specific show
 async for ep in di.mixshows.iter_episodes(show_id):
     print(ep.name)

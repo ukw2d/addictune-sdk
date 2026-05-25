@@ -138,6 +138,11 @@ def mixshows_list_payload():
 
 
 @pytest.fixture
+def popular_mixshows_payload():
+    return load_fixture("popular_mixshows.json")
+
+
+@pytest.fixture
 def show_episodes_payload():
     return load_fixture("show_episodes.json")
 

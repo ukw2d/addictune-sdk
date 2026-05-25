@@ -1,0 +1,25 @@
+[
+  {
+    "id": 13896,
+    "slug": "a-state-of-trance",
+    "name": "A State of Trance",
+    "active": true,
+    "channel_ids": [1],
+    "channel_filter_ids": [5, 89, 7, 118, 106, 1],
+    "follows_count": 24837,
+    "human_readable_schedule": ["Every Thursday"],
+    "next_start_at": "2026-05-28T14:00:00-04:00",
+    "next_end_at": "2026-05-28T16:00:00-04:00",
+    "artists_tagline": "with Armin van Buuren"
+  },
+  {
+    "id": 13765,
+    "slug": "global-dj-broadcast",
+    "name": "Global DJ Broadcast",
+    "active": true,
+    "channel_ids": [1],
+    "channel_filter_ids": [5, 89, 7, 118, 106, 1],
+    "follows_count": 11329,
+    "artists_tagline": "with Markus Schulz"
+  }
+]

@@ -64,6 +64,36 @@ class MixShowsAPI:
             unwrap_key="results",
         )
 
+    def iter_popular(
+        self,
+        *,
+        per_page: int = 25,
+        start_page: int = 1,
+        end_page: int | None = None,
+    ) -> AsyncIterator[MixShow]:
+        """Yield mix shows in the website's popular-show ordering.
+
+        Unlike channel filters, popular mix shows are returned from a
+        paginated listing ordered by active status and follow count.
+
+        Args:
+            per_page: Items per page.
+            start_page: First page to request (1-based).
+            end_page: Last page to request. ``None`` fetches all pages.
+
+        Yields:
+            :class:`~addictune_sdk.models.mixshow.MixShow` instances.
+        """
+        return paginate(
+            self._client,
+            f"/{self._network}/shows/index",
+            MixShow,
+            params={"order_by[]": ["active", "follows_count"]},
+            per_page=per_page,
+            start_page=start_page,
+            end_page=end_page,
+        )
+
     # ── Episodes ─────────────────────────────────────────────────
 
     def iter_episodes(

@@ -111,6 +111,52 @@ async def test_iter_shows_passes_active_param(mocker, mixshows_list_payload):
     assert call_params["active"] == "false"
 
 
+# ── iter_popular ─────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_iter_popular_returns_har_listing_fields(mocker, popular_mixshows_payload):
+    mocker.patch(
+        "addictune_sdk.api._helpers._fetch_page",
+        return_value=(popular_mixshows_payload, 1),
+    )
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+
+    results = [show async for show in MixShowsAPI(mock_client).iter_popular()]
+
+    assert [show.id for show in results] == [13896, 13765]
+    assert results[0].follows_count == 24837
+    assert results[0].channel_ids == [1]
+    assert results[0].channel_filter_ids == [5, 89, 7, 118, 106, 1]
+    assert results[0].artists_tagline == "with Armin van Buuren"
+
+
+@pytest.mark.asyncio
+async def test_iter_popular_matches_show_browser_request(mocker, popular_mixshows_payload):
+    mock_fetch = mocker.patch(
+        "addictune_sdk.api._helpers._fetch_page",
+        return_value=(popular_mixshows_payload, 1),
+    )
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+
+    _ = [
+        show
+        async for show in MixShowsAPI(mock_client, network="rockradio").iter_popular(
+            per_page=25, start_page=1, end_page=1
+        )
+    ]
+
+    assert mock_fetch.call_args.args[1] == "/rockradio/shows/index"
+    assert mock_fetch.call_args.kwargs["params"] == {
+        "order_by[]": ["active", "follows_count"],
+        "per_page": 25,
+        "page": 1,
+    }
+    assert mock_fetch.call_args.kwargs["unwrap_key"] is None
+
+
 # ── iter_episodes ────────────────────────────────────────────────────
 
 
