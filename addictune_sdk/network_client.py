@@ -1,6 +1,6 @@
 import httpx
 
-from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, TracksAPI
+from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, SearchAPI, TracksAPI
 from .models.network import Network
 
 
@@ -8,7 +8,7 @@ class NetworkClient:
     """Scoped client for a single radio network (e.g. ``"di"``, ``"rockradio"``).
 
     Created by :meth:`Client.network`.  Holds the API namespaces
-    (``auth``, ``channels``, ``mixshows``, ``playlists``, ``tracks``)
+    (``auth``, ``channels``, ``mixshows``, ``playlists``, ``search``, ``tracks``)
     scoped to a single network slug so that URL paths are automatically
     prefixed (e.g. ``/di/channels``).
 
@@ -21,6 +21,8 @@ class NetworkClient:
             mix shows, episodes, and upcoming events.
         playlists: :class:`~addictune_sdk.api.playlists.PlaylistsAPI` — browse
             playlists, get playlist content, and manage followed playlists.
+        search: :class:`~addictune_sdk.api.search.SearchAPI` — search
+            channels, shows, playlists, and tracks.
         tracks: :class:`~addictune_sdk.api.tracks.TracksAPI` — get track
             details, manage liked tracks, vote, and report skips.
     """
@@ -32,6 +34,7 @@ class NetworkClient:
         self.channels = ChannelsAPI(http_client, network.slug, network.listen_host)
         self.mixshows = MixShowsAPI(http_client, network.slug)
         self.playlists = PlaylistsAPI(http_client, network.slug)
+        self.search = SearchAPI(http_client, network.slug)
         self.tracks = TracksAPI(http_client, network.slug)
 
     @property

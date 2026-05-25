@@ -36,6 +36,7 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 | **Tracks**   | Get by ID, liked tracks, vote up/down/delete, skip events, audio quality prefs   |
 | **Playlists**| Featured playlists, browse by popularity/newest, get tracks, follow, listen history |
 | **Mix Shows**| Browse shows, iterate episodes, upcoming events, follow/unfollow shows           |
+| **Search**   | Search channels, shows, playlists, and tracks within a network                  |
 | **User**     | Ping API, check premium status, payment methods                                  |
 
 ---
@@ -182,6 +183,14 @@ upcoming = await di.mixshows.get_upcoming(limit=10)
 # Follow or unfollow a show
 await di.mixshows.follow(user_id, show_id)
 await di.mixshows.unfollow(user_id, show_id)
+```
+
+### Search
+
+```python
+results = await di.search.query("state of trance")
+for show in results.shows.items:
+    print(show.name)
 ```
 
 ### User

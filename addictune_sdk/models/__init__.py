@@ -19,6 +19,7 @@ from .playlist import (
     PlaylistTag,
     PlaylistTracks,
 )
+from .search import SearchBucket, SearchResults
 from .track import (
     Artist,
     AudioFormat,
@@ -60,6 +61,8 @@ __all__ = [
     "Ping",
     "PremiumStatus",
     "RoutineTrack",
+    "SearchBucket",
+    "SearchResults",
     "ShowChannel",
     "ShowEpisode",
     "SkipEvent",

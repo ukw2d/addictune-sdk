@@ -4,6 +4,7 @@ import pytest
 
 from addictune_sdk.api.auth import AuthAPI
 from addictune_sdk.api.channels import ChannelsAPI
+from addictune_sdk.api.search import SearchAPI
 from addictune_sdk.client import AddictuneClient, Client
 from addictune_sdk.config import AddictuneConfig
 from addictune_sdk.exceptions import AddictuneAuthError
@@ -123,6 +124,13 @@ async def test_network_client_has_channels_api(config, patch_transport):
     async with Client(config=config) as client:
         di = client.network("di")
         assert isinstance(di.channels, ChannelsAPI)
+
+
+@pytest.mark.asyncio
+async def test_network_client_has_search_api(config, patch_transport):
+    async with Client(config=config) as client:
+        di = client.network("di")
+        assert isinstance(di.search, SearchAPI)
 
 
 @pytest.mark.asyncio
