@@ -1,4 +1,5 @@
 import time
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -32,11 +33,13 @@ class ChannelsAPI:
         network: str = "di",
         listen_host: str = "",
         stream_qualities: dict[str, str] | None = None,
+        public_client: httpx.AsyncClient | None = None,
     ):
         self._client = client
         self._network = network
         self._listen_host = listen_host
         self._stream_qualities = stream_qualities or STREAM_QUALITIES
+        self._public_client = public_client or client
 
     async def get_all(self) -> list[Channel]:
         """Return all channels on the network.
@@ -222,3 +225,27 @@ class ChannelsAPI:
         """
         quality_path = self._stream_qualities.get(quality, STREAM_QUALITIES["high"])
         return f"{self._listen_host}/{quality_path}/{channel_key}.pls?listen_key={listen_key}"
+
+    async def resolve_stream_url(self, url: str) -> str:
+        """Resolve a PLS/M3U playlist URL to its first audio stream URL."""
+        path = urlparse(url).path.lower()
+        if not path.endswith((".pls", ".m3u", ".m3u8")):
+            return url
+
+        response = await self._public_client.get(url)
+        await raise_for_status(response)
+
+        lines = (line.strip() for line in response.text.splitlines())
+        if path.endswith(".pls"):
+            lines = (
+                line.split("=", 1)[1].strip()
+                for line in lines
+                if "=" in line and line.split("=", 1)[0].lower().startswith("file")
+            )
+        else:
+            lines = (line for line in lines if line and not line.startswith("#"))
+
+        for stream_url in lines:
+            if stream_url:
+                return urljoin(url, stream_url)
+        raise ValueError("No stream URL found in playlist")

@@ -123,10 +123,17 @@ now = await di.channels.get_currently_playing()
 
 # Build a direct stream URL
 url = di.channels.get_stream_url("trance", "your-listen-key", quality="hi")
+stream_url = await di.channels.resolve_stream_url(url)
 
 # Favorites
 await di.channels.add_favorite(user_id, channel_id)
 favs = await di.channels.get_favorites(user_id)
+```
+
+Public artwork can be downloaded without passing API session headers to the CDN:
+
+```python
+raw_image = await client.assets.get_bytes(channel.images.url("compact", size=200))
 ```
 
 ### Tracks

@@ -27,11 +27,22 @@ class NetworkClient:
             details, manage liked tracks, vote, and report skips.
     """
 
-    def __init__(self, http_client: httpx.AsyncClient, network: Network):
+    def __init__(
+        self,
+        http_client: httpx.AsyncClient,
+        network: Network,
+        public_http_client: httpx.AsyncClient | None = None,
+    ):
         self._client = http_client
         self._network = network
+        public_http_client = public_http_client or http_client
         self.auth = AuthAPI(http_client, network.slug)
-        self.channels = ChannelsAPI(http_client, network.slug, network.listen_host)
+        self.channels = ChannelsAPI(
+            http_client,
+            network.slug,
+            network.listen_host,
+            public_client=public_http_client,
+        )
         self.mixshows = MixShowsAPI(http_client, network.slug)
         self.playlists = PlaylistsAPI(http_client, network.slug)
         self.search = SearchAPI(http_client, network.slug)

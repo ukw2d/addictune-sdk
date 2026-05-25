@@ -204,6 +204,30 @@ async def test_get_upcoming_uses_network_in_url(mocker, upcoming_episodes_payloa
 
 
 @pytest.mark.asyncio
+async def test_get_upcoming_returns_etag_cached_data_on_304(
+    mocker, upcoming_episodes_payload
+):
+    mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag",
+        return_value=('"upcoming"', upcoming_episodes_payload),
+    )
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.build_request.return_value = httpx.Request(
+        "GET", "https://api.example/v1/di/events/upcoming?limit=24"
+    )
+    mock_client.get.return_value = make_response(304)
+
+    result = await MixShowsAPI(mock_client, network="di").get_upcoming()
+
+    assert len(result) == 2
+    mock_client.get.assert_called_once_with(
+        "/di/events/upcoming",
+        params={"limit": 24},
+        headers={"If-None-Match": '"upcoming"'},
+    )
+
+
+@pytest.mark.asyncio
 async def test_get_upcoming_raises_on_error(mocker):
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(500, text="Internal Server Error")

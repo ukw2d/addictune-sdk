@@ -72,6 +72,32 @@ async def test_cached_get_list_no_etag_skips_cache_write(mocker):
     mock_set_etag.assert_not_called()
 
 
+@pytest.mark.asyncio
+async def test_cached_get_list_with_params_uses_full_request_url_as_key(mocker):
+    mock_get_etag = mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None)
+    )
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+
+    payload = [{"channel_id": 1, "position": 0}]
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.build_request.return_value = httpx.Request(
+        "GET", "https://api.example/v1/di/favs?limit=24"
+    )
+    mock_client.get.return_value = make_response(
+        200, payload, headers={"etag": '"e1"', "cache-control": "max-age=60"}
+    )
+
+    await cached_get_list(mock_client, "/di/favs", LikedChannelID, params={"limit": 24})
+
+    key = "https://api.example/v1/di/favs?limit=24"
+    mock_get_etag.assert_called_once_with(key)
+    mock_client.get.assert_called_once_with(
+        "/di/favs", params={"limit": 24}, headers={}
+    )
+    mock_set_etag.assert_called_once_with(key, '"e1"', payload, ttl=60)
+
+
 # ── cached_get_object ────────────────────────────────────────────────
 
 

@@ -605,3 +605,49 @@ def test_get_stream_url_different_network(mocker):
         api.get_stream_url("classichardrock", "key99", quality="high")
         == "https://listen.rockradio.com/premium_high/classichardrock.pls?listen_key=key99"
     )
+
+
+@pytest.mark.asyncio
+async def test_resolve_stream_url_returns_direct_url_without_request(mocker):
+    public_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    api = ChannelsAPI(mocker.AsyncMock(), public_client=public_client)
+
+    url = "https://stream.example/live.mp3"
+    assert await api.resolve_stream_url(url) == url
+    public_client.get.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_resolve_stream_url_resolves_pls_with_public_client(mocker):
+    public_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    public_client.get.return_value = make_response(
+        200, text="[playlist]\nFile1=https://stream.example/live.mp3\n"
+    )
+    api = ChannelsAPI(mocker.AsyncMock(), public_client=public_client)
+    url = "https://listen.rockradio.com/premium_high/rock.pls?listen_key=key"
+
+    assert await api.resolve_stream_url(url) == "https://stream.example/live.mp3"
+    public_client.get.assert_called_once_with(url)
+
+
+@pytest.mark.asyncio
+async def test_resolve_stream_url_resolves_relative_m3u_entry(mocker):
+    public_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    public_client.get.return_value = make_response(
+        200, text="#EXTM3U\nstreams/live.aac\n"
+    )
+    api = ChannelsAPI(mocker.AsyncMock(), public_client=public_client)
+
+    result = await api.resolve_stream_url("https://listen.di.fm/radio/list.m3u8")
+
+    assert result == "https://listen.di.fm/radio/streams/live.aac"
+
+
+@pytest.mark.asyncio
+async def test_resolve_stream_url_raises_on_http_error(mocker):
+    public_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    public_client.get.return_value = make_response(404, text="Not Found")
+    api = ChannelsAPI(mocker.AsyncMock(), public_client=public_client)
+
+    with pytest.raises(AddictuneNotFoundError):
+        await api.resolve_stream_url("https://listen.di.fm/radio/list.pls")

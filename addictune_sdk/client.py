@@ -3,7 +3,7 @@ import logging
 import httpx
 from pydantic import SecretStr
 
-from .api import AuthAPI, ChannelsAPI, MixShowsAPI, PlaylistsAPI, TracksAPI, UserAPI
+from .api import AssetsAPI, UserAPI
 from . import cache
 from .config import AddictuneConfig
 from .models.auth import AuthResponse
@@ -52,6 +52,11 @@ class Client:
             timeout=self._config.timeout,
             transport=RetryTransport(self._config),
         )
+        self._public_http_client = httpx.AsyncClient(
+            timeout=self._config.timeout,
+            follow_redirects=True,
+            transport=RetryTransport(self._config),
+        )
         self._listen_key: SecretStr | None = (
             SecretStr(listen_key) if listen_key else None
         )
@@ -71,6 +76,7 @@ class Client:
         self._network_clients: dict[str, NetworkClient] = {}
 
         # Client-level APIs (no network scope needed)
+        self.assets = AssetsAPI(self._public_http_client)
         self.user = UserAPI(self._http_client)
 
         # Propagate default cache TTL
@@ -110,7 +116,7 @@ class Client:
             )
         if slug not in self._network_clients:
             self._network_clients[slug] = NetworkClient(
-                self._http_client, self._networks[slug]
+                self._http_client, self._networks[slug], self._public_http_client
             )
         return self._network_clients[slug]
 
@@ -155,6 +161,7 @@ class Client:
         """Close the underlying HTTP connection pool."""
         logger.debug("Closing HTTP connection pool")
         await self._http_client.aclose()
+        await self._public_http_client.aclose()
 
     async def __aenter__(self):
         return self

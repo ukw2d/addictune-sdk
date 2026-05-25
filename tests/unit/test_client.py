@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from addictune_sdk.api.auth import AuthAPI
+from addictune_sdk.api.assets import AssetsAPI
 from addictune_sdk.api.channels import ChannelsAPI
 from addictune_sdk.api.search import SearchAPI
 from addictune_sdk.client import AddictuneClient, Client
@@ -81,6 +82,7 @@ async def test_login_sets_session_key_property(
 async def test_session_key_constructor_sets_header(config, patch_transport):
     async with Client(session_key="preloaded-key", config=config) as client:
         assert client._http_client.headers.get("x-session-key") == "preloaded-key"
+        assert client.assets._client.headers.get("x-session-key") is None
 
 
 @pytest.mark.asyncio
@@ -124,6 +126,12 @@ async def test_network_client_has_channels_api(config, patch_transport):
     async with Client(config=config) as client:
         di = client.network("di")
         assert isinstance(di.channels, ChannelsAPI)
+
+
+@pytest.mark.asyncio
+async def test_client_has_assets_api(config, patch_transport):
+    async with Client(config=config) as client:
+        assert isinstance(client.assets, AssetsAPI)
 
 
 @pytest.mark.asyncio

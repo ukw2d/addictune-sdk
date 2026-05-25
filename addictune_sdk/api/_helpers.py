@@ -18,6 +18,7 @@ async def cached_get_list(
     url: str,
     model: type[T],
     id_field: str | None = None,
+    params: dict | None = None,
 ) -> list[T]:
     """ETag-cached GET that returns a list of validated models.
 
@@ -27,10 +28,16 @@ async def cached_get_list(
     4. On success, stores the new ETag, indexes items (if *id_field*
        is given), and returns validated models.
     """
-    etag, cached_data = cache.get_etag(url)
+    cache_key = (
+        str(client.build_request("GET", url, params=params).url) if params else url
+    )
+    etag, cached_data = cache.get_etag(cache_key)
 
     headers = {"If-None-Match": etag} if etag else {}
-    response = await client.get(url, headers=headers)
+    if params:
+        response = await client.get(url, params=params, headers=headers)
+    else:
+        response = await client.get(url, headers=headers)
 
     if response.status_code == 304 and cached_data is not None:
         return [model.model_validate(item) for item in cached_data]
@@ -41,9 +48,9 @@ async def cached_get_list(
 
     if rh.etag:
         ttl = cache.resolve_ttl(rh.ttl)
-        cache.set_etag(url, rh.etag, data, ttl=ttl)
+        cache.set_etag(cache_key, rh.etag, data, ttl=ttl)
         if id_field:
-            cache.index_list(url, data, id_field=id_field, ttl=ttl)
+            cache.index_list(cache_key, data, id_field=id_field, ttl=ttl)
 
     return [model.model_validate(item) for item in data]
 

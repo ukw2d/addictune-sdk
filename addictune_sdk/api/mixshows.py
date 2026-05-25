@@ -4,7 +4,7 @@ import httpx
 
 from ..exceptions import raise_for_status
 from ..models.mixshow import MixShow, ShowEpisode
-from ._helpers import cached_get_object, paginate
+from ._helpers import cached_get_list, cached_get_object, paginate
 
 
 class MixShowsAPI:
@@ -103,10 +103,12 @@ class MixShowsAPI:
         Returns:
             A list of :class:`~addictune_sdk.models.mixshow.ShowEpisode`.
         """
-        url = f"/{self._network}/events/upcoming"
-        response = await self._client.get(url, params={"limit": limit})
-        await raise_for_status(response)
-        return [ShowEpisode.model_validate(item) for item in response.json()]
+        return await cached_get_list(
+            self._client,
+            f"/{self._network}/events/upcoming",
+            ShowEpisode,
+            params={"limit": limit},
+        )
 
     # ── Followed ─────────────────────────────────────────────────
 
