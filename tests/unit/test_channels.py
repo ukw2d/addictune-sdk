@@ -321,6 +321,7 @@ async def test_get_currently_playing_returns_entries(mocker, now_playing_payload
     assert result[0].channel_id == 324
     assert result[0].channel_key == "00sclubhits"
     assert result[0].track.display_title == "Call on Me (Filterheadz Remix)"
+    assert result[0].track.resolved_track_id == 2963972
 
 
 # ── get_routine ──────────────────────────────────────────────────────

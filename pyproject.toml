@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "addictune-sdk"
-version = "0.2.6"
+version = "0.2.7"
 description = "Async Python SDK for the AudioAddict radio platform (DI.FM, RadioTunes, RockRadio, JazzRadio, ClassicalRadio, ZenRadio)"
 readme = "README.md"
 license = "MIT"
@@ -43,6 +43,7 @@ classifiers = [
 urls.Repository = "https://github.com/ukw2d/addictune-sdk"
 dependencies = [
     "httpx>=0.28",
+    "platformdirs>=4",
     "pydantic>=2.11",
 ]
 

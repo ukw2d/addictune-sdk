@@ -104,6 +104,7 @@ class TrackHistoryEntry(BaseModel):
     """Track as returned by track_history and currently_playing endpoints.
 
     Attributes:
+        id: The track identifier as returned by currently_playing.
         track_id: The track's identifier.
         channel_id: The channel it played on.
         title: Track title.
@@ -129,6 +130,11 @@ class TrackHistoryEntry(BaseModel):
     images: ImageSet | None = None
 
     model_config = {"extra": "ignore"}
+
+    @property
+    def resolved_track_id(self) -> int | None:
+        """Return the track ID across track-history and now-playing payloads."""
+        return self.track_id or self.id
 
 
 class NowPlaying(BaseModel):

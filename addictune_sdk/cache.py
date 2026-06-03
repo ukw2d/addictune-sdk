@@ -14,10 +14,13 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
-_default_cache_dir = Path.home() / ".cache" / "addictune_sdk"
+from platformdirs import user_cache_path
+
+_default_cache_dir = user_cache_path("addictune_sdk")
 
 _conn: sqlite3.Connection | None = None
 _cache_dir: Path = _default_cache_dir
@@ -49,9 +52,7 @@ DELETE FROM etag_cache WHERE exp IS NOT NULL AND exp < ?
 
 
 def _now() -> float:
-    from time import monotonic
-
-    return monotonic()
+    return time.time()
 
 
 def _open_db() -> sqlite3.Connection:
