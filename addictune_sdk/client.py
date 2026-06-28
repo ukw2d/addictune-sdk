@@ -6,6 +6,7 @@ from pydantic import SecretStr
 from .api import AssetsAPI, UserAPI
 from . import cache
 from .config import AddictuneConfig
+from .exceptions import AddictuneAuthError
 from .models.auth import AuthResponse
 from .models.network import BUILTIN_NETWORKS, Network
 from .network_client import NetworkClient
@@ -30,9 +31,14 @@ class Client:
     operations to a specific radio network via :meth:`network`.
 
     Args:
-        session_key: Pre-existing session key (``X-Session-Key`` header).
-            If provided, you can skip :meth:`login`.
+        session_key: Pre-existing session key for the default network.
+            If provided alongside *credentials*, you can defer per-network
+            sessions to :meth:`ensure_session` without calling :meth:`login`.
         listen_key: Pre-existing listen key for stream URLs.
+        credentials: ``(email, password)`` tuple.  When supplied, allows
+            :meth:`ensure_session` to mint sessions for any network on demand
+            without an explicit :meth:`login` call first.  Useful when
+            restoring a session from a keyring / cache.
         config: Override default SDK settings (API base URL, timeout,
             default network, retry, circuit breaker, etc.).
         custom_networks: Additional :class:`Network` instances to
@@ -43,14 +49,18 @@ class Client:
         self,
         session_key: str | None = None,
         listen_key: str | None = None,
+        credentials: tuple[str, str] | None = None,
         config: AddictuneConfig | None = None,
         custom_networks: list[Network] | None = None,
     ):
         self._config = config or AddictuneConfig()
+        self._session_keys: dict[str, str] = {}
+        self._credentials: tuple[str, str] | None = credentials
         self._http_client = httpx.AsyncClient(
             base_url=self._config.api_base,
             timeout=self._config.timeout,
             transport=RetryTransport(self._config),
+            event_hooks={"request": [self._inject_session_key]},
         )
         self._public_http_client = httpx.AsyncClient(
             timeout=self._config.timeout,
@@ -60,12 +70,9 @@ class Client:
         self._listen_key: SecretStr | None = (
             SecretStr(listen_key) if listen_key else None
         )
-        self._session_key: SecretStr | None = (
-            SecretStr(session_key) if session_key else None
-        )
 
         if session_key:
-            self._http_client.headers.update({"X-Session-Key": session_key})
+            self._session_keys[self._config.network] = session_key
 
         # Build lookup of available networks: built-ins + custom
         self._networks: dict[str, Network] = {
@@ -88,6 +95,13 @@ class Client:
             self._config.network,
             self._config.timeout,
         )
+
+    async def _inject_session_key(self, request: httpx.Request) -> None:
+        # path: /v1/<slug>/...
+        parts = request.url.path.strip("/").split("/")
+        slug = parts[1] if len(parts) > 1 else self._config.network
+        if key := self._session_keys.get(slug):
+            request.headers["X-Session-Key"] = key
 
     def network(self, slug: str) -> NetworkClient:
         """Return a scoped client for the given network slug.
@@ -127,8 +141,8 @@ class Client:
 
     @property
     def session_key(self) -> str | None:
-        """The current session key, or ``None`` if not authenticated."""
-        return self._session_key.get_secret_value() if self._session_key else None
+        """The session key for the default network, or ``None`` if not authenticated."""
+        return self._session_keys.get(self._config.network)
 
     async def login(self, email: str, password: str) -> AuthResponse:
         """Authenticate with email and password.
@@ -144,11 +158,9 @@ class Client:
             :class:`AuthResponse` containing ``user_id``, ``api_key``,
             and ``listen_key``.
         """
-        default = self.network(self._config.network)
-        auth = await default.auth.login(email, password)
-        raw_key = auth.api_key.get_secret_value()
-        self._http_client.headers.update({"X-Session-Key": raw_key})
-        self._session_key = SecretStr(raw_key)
+        self._credentials = (email, password)
+        auth = await self.network(self._config.network).auth.login(email, password)
+        self._session_keys[self._config.network] = auth.api_key.get_secret_value()
         self._listen_key = SecretStr(auth.listen_key.get_secret_value())
         logger.info(
             "Login successful (user_id=%s, network=%s)",
@@ -156,6 +168,24 @@ class Client:
             self._config.network,
         )
         return auth
+
+    async def ensure_session(self, slug: str) -> None:
+        """Sessions are per-network; mint one from stored credentials on demand.
+
+        Args:
+            slug: Network identifier to ensure a session for.
+
+        Raises:
+            AddictuneAuthError: If no session exists and no credentials are stored.
+        """
+        if slug in self._session_keys:
+            return
+        if self._credentials is None:
+            raise AddictuneAuthError(
+                f"No session for {slug!r} and no credentials to mint one"
+            )
+        auth = await self.network(slug).auth.login(*self._credentials)
+        self._session_keys[slug] = auth.api_key.get_secret_value()
 
     async def close(self) -> None:
         """Close the underlying HTTP connection pool."""

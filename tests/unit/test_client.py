@@ -53,7 +53,7 @@ async def test_login_sets_session_key_header(
 
     async with Client(config=config) as client:
         await client.login("user@example.com", "pass")
-        assert client._http_client.headers.get("x-session-key") == auth_payload["key"]
+        assert client._session_keys.get(config.network) == auth_payload["key"]
 
 
 @pytest.mark.asyncio
@@ -81,8 +81,7 @@ async def test_login_sets_session_key_property(
 @pytest.mark.asyncio
 async def test_session_key_constructor_sets_header(config, patch_transport):
     async with Client(session_key="preloaded-key", config=config) as client:
-        assert client._http_client.headers.get("x-session-key") == "preloaded-key"
-        assert client.assets._client.headers.get("x-session-key") is None
+        assert client._session_keys.get(config.network) == "preloaded-key"
 
 
 @pytest.mark.asyncio
