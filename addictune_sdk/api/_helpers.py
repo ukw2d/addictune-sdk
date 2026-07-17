@@ -19,6 +19,7 @@ async def cached_get_list(
     model: type[T],
     id_field: str | None = None,
     params: dict | None = None,
+    use_cache: bool = True,
 ) -> list[T]:
     """ETag-cached GET that returns a list of validated models.
 
@@ -27,7 +28,21 @@ async def cached_get_list(
     3. On 304, returns models validated from cached data.
     4. On success, stores the new ETag, indexes items (if *id_field*
        is given), and returns validated models.
+
+    Set *use_cache* to ``False`` for volatile endpoints whose data changes
+    faster than the server's ETag/Cache-Control lifetime can reflect
+    (e.g. ``/events/upcoming``, ``/currently_playing``).  When disabled,
+    no ``If-None-Match`` is sent, no cache read/write occurs, and a fresh
+    response is always returned.
     """
+    if not use_cache:
+        if params:
+            response = await client.get(url, params=params)
+        else:
+            response = await client.get(url)
+        await raise_for_status(response)
+        return [model.model_validate(item) for item in response.json()]
+
     cache_key = (
         str(client.build_request("GET", url, params=params).url) if params else url
     )

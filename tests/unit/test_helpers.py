@@ -73,6 +73,32 @@ async def test_cached_get_list_no_etag_skips_cache_write(mocker):
 
 
 @pytest.mark.asyncio
+async def test_cached_get_list_use_cache_false_skips_cache(mocker):
+    """use_cache=False must bypass cache read/write entirely."""
+    mock_get_etag = mocker.patch("addictune_sdk.api._helpers.cache.get_etag")
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+
+    payload = [{"id": 1, "key": "trance", "name": "Trance", "network_id": 1}]
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(
+        200, payload, headers={"etag": '"e1"', "cache-control": "max-age=60"}
+    )
+
+    result = await cached_get_list(
+        mock_client, "/di/channels", Channel, use_cache=False
+    )
+
+    assert len(result) == 1
+    assert result[0].key == "trance"
+    mock_get_etag.assert_not_called()
+    mock_set_etag.assert_not_called()
+    call_kwargs = mock_client.get.call_args[1]
+    assert "headers" not in call_kwargs or "If-None-Match" not in call_kwargs.get(
+        "headers", {}
+    )
+
+
+@pytest.mark.asyncio
 async def test_cached_get_list_with_params_uses_full_request_url_as_key(mocker):
     mock_get_etag = mocker.patch(
         "addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None)

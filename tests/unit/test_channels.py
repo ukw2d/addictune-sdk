@@ -314,7 +314,7 @@ async def test_get_currently_playing_returns_entries(mocker, now_playing_payload
     mock_client.get.return_value = make_response(200, now_playing_payload)
 
     api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_currently_playing()
+    result = await api.get_currently_playing(use_cache=True)
 
     assert len(result) == 2
     assert isinstance(result[0], NowPlaying)
@@ -322,6 +322,31 @@ async def test_get_currently_playing_returns_entries(mocker, now_playing_payload
     assert result[0].channel_key == "00sclubhits"
     assert result[0].track.display_title == "Call on Me (Filterheadz Remix)"
     assert result[0].track.resolved_track_id == 2963972
+
+
+@pytest.mark.asyncio
+async def test_get_currently_playing_bypasses_cache_by_default(
+    mocker, now_playing_payload
+):
+    """Volatile now-playing data must always hit the network by default."""
+    mock_get_etag = mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag",
+        return_value=('"stale"', now_playing_payload),
+    )
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    fresh_payload = [now_playing_payload[1]]
+    mock_client.get.return_value = make_response(200, fresh_payload)
+
+    result = await ChannelsAPI(mock_client, network="di").get_currently_playing()
+
+    assert len(result) == 1
+    mock_get_etag.assert_not_called()
+    mock_set_etag.assert_not_called()
+    call_kwargs = mock_client.get.call_args[1]
+    assert "headers" not in call_kwargs or "If-None-Match" not in call_kwargs.get(
+        "headers", {}
+    )
 
 
 # ── get_routine ──────────────────────────────────────────────────────

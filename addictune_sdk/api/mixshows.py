@@ -124,11 +124,20 @@ class MixShowsAPI:
             end_page=end_page,
         )
 
-    async def get_upcoming(self, limit: int = 24) -> list[ShowEpisode]:
+    async def get_upcoming(
+        self, limit: int = 24, *, use_cache: bool = False
+    ) -> list[ShowEpisode]:
         """Fetch upcoming mix show events.
+
+        Volatile endpoint: results shift as shows start and end, so the
+        ETag cache is bypassed by default to avoid returning stale events
+        near show boundaries.  Pass ``use_cache=True`` to opt back into
+        the standard ETag cache.
 
         Args:
             limit: Maximum number of events to return (default 24).
+            use_cache: When ``True``, use the persistent ETag cache.
+                Defaults to ``False`` because the data is time-sensitive.
 
         Returns:
             A list of :class:`~addictune_sdk.models.mixshow.ShowEpisode`.
@@ -138,6 +147,7 @@ class MixShowsAPI:
             f"/{self._network}/events/upcoming",
             ShowEpisode,
             params={"limit": limit},
+            use_cache=use_cache,
         )
 
     # ── Followed ─────────────────────────────────────────────────

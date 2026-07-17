@@ -88,14 +88,24 @@ class ChannelsAPI:
             TrackHistoryEntry,
         )
 
-    async def get_currently_playing(self) -> list[NowPlaying]:
+    async def get_currently_playing(
+        self, *, use_cache: bool = False
+    ) -> list[NowPlaying]:
         """Return now-playing information for all channels.
 
         Each entry includes the channel ID/key and the currently
         playing track.
+
+        Volatile endpoint: the playing track changes every few minutes,
+        so the ETag cache is bypassed by default to avoid returning a
+        stale track.  Pass ``use_cache=True`` to opt back into the
+        standard ETag cache.
         """
         return await cached_get_list(
-            self._client, f"/{self._network}/currently_playing", NowPlaying
+            self._client,
+            f"/{self._network}/currently_playing",
+            NowPlaying,
+            use_cache=use_cache,
         )
 
     async def get_routine(

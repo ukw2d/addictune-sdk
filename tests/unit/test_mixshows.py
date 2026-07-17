@@ -253,6 +253,7 @@ async def test_get_upcoming_uses_network_in_url(mocker, upcoming_episodes_payloa
 async def test_get_upcoming_returns_etag_cached_data_on_304(
     mocker, upcoming_episodes_payload
 ):
+    """Caching is opt-in for the volatile /events/upcoming endpoint."""
     mocker.patch(
         "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"upcoming"', upcoming_episodes_payload),
@@ -263,7 +264,7 @@ async def test_get_upcoming_returns_etag_cached_data_on_304(
     )
     mock_client.get.return_value = make_response(304)
 
-    result = await MixShowsAPI(mock_client, network="di").get_upcoming()
+    result = await MixShowsAPI(mock_client, network="di").get_upcoming(use_cache=True)
 
     assert len(result) == 2
     mock_client.get.assert_called_once_with(
@@ -271,6 +272,35 @@ async def test_get_upcoming_returns_etag_cached_data_on_304(
         params={"limit": 24},
         headers={"If-None-Match": '"upcoming"'},
     )
+
+
+@pytest.mark.asyncio
+async def test_get_upcoming_bypasses_cache_by_default(mocker, upcoming_episodes_payload):
+    """Default behavior must always issue a fresh request, even with a cached entry."""
+    cached_entry = upcoming_episodes_payload
+    mock_get_etag = mocker.patch(
+        "addictune_sdk.api._helpers.cache.get_etag",
+        return_value=('"stale"', cached_entry),
+    )
+    mock_set_etag = mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    # Server returns *different* data than the stale cache would have.
+    fresh_payload = [upcoming_episodes_payload[1]]
+    mock_client.get.return_value = make_response(200, fresh_payload)
+
+    result = await MixShowsAPI(mock_client, network="di").get_upcoming(limit=5)
+
+    assert len(result) == 1
+    assert result[0].id == 802
+    # No cache read or write must occur.
+    mock_get_etag.assert_not_called()
+    mock_set_etag.assert_not_called()
+    # And no If-None-Match header must be sent.
+    call_kwargs = mock_client.get.call_args[1]
+    assert "headers" not in call_kwargs or "If-None-Match" not in call_kwargs.get(
+        "headers", {}
+    )
+    assert call_kwargs["params"] == {"limit": 5}
 
 
 @pytest.mark.asyncio
