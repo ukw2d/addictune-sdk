@@ -84,20 +84,58 @@ class Track(ContentAsset):
 
 
 class LikedTrack(Track):
-    """A track returned from vote/liked-track endpoints.
+    """A track returned from the ``track_votes`` liked-track endpoints.
 
-    The API wraps the track in ``{up: bool, down: bool, track: {...}}``.
-    The ``_unwrap_nested_track`` validator flattens this into a plain
-    :class:`Track` with the vote flags merged in.
+    The API wraps the actual track under a ``track`` key alongside outer
+    vote-row metadata.  The ``_unwrap_nested_track`` validator flattens
+    this into a :class:`Track` while preserving both identifiers:
+
+    - :attr:`id` is always the *track* id (from ``track.id``).
+    - :attr:`track_vote_id` is the vote-row id (from the outer ``id``).
+
+    The outer metadata (``track_id``, ``channel_id``, ``network_id``,
+    ``position``, ``created_at``, ``updated_at``) is preserved for
+    channel/date filtering in clients.
+
+    Attributes:
+        track_vote_id: The vote-row identifier (the outer ``id``).
+        track_id: The track identifier from the outer metadata.  Mirrors
+            :attr:`id` when the API populates it.
+        channel_id: Channel the like was registered on, when available.
+            May be ``None`` — treat as "unknown channel".
+        network_id: Network the like was registered on.
+        position: Sort position in the user's liked-tracks list.
+        created_at: ISO timestamp of when the like was created.
+        updated_at: ISO timestamp of when the like was last updated.
     """
+
+    track_vote_id: int | None = None
+    track_id: int | None = None
+    channel_id: int | None = None
+    network_id: int | None = None
+    position: int | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
     @model_validator(mode="before")
     @classmethod
     def _unwrap_nested_track(cls, data: dict) -> dict:
         if not isinstance(data, dict) or "track" not in data:
             return data
-        track_data = {**data.pop("track"), **data}
-        return track_data
+
+        outer = dict(data)
+        track = outer.pop("track") or {}
+
+        # The outer ``id`` is the vote-row id; the nested ``track.id`` is
+        # the actual track id.  Pull the vote-row id aside before merging
+        # so it can never overwrite the track id.
+        vote_row_id = outer.pop("id", None)
+
+        merged = {**outer, **track}
+        merged["id"] = track.get("id") or outer.get("track_id")
+        merged["track_vote_id"] = vote_row_id
+        merged["track_id"] = outer.get("track_id") or track.get("id")
+        return merged
 
 
 class SkipEvent(BaseModel):

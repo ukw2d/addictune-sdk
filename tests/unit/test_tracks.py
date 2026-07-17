@@ -196,6 +196,78 @@ async def test_get_liked_track_handles_single_object(mocker, liked_track_payload
     assert result.id == 2027566
 
 
+@pytest.mark.asyncio
+async def test_get_liked_track_preserves_track_id_over_vote_row_id(mocker, liked_track_payload):
+    """The outer ``id`` (vote-row id) must not overwrite ``track.id``.
+
+    The live ``track_votes`` payload returns outer vote metadata with its
+    own ``id`` and ``track_id``, alongside a nested ``track`` object.  The
+    SDK must surface the *track* id as ``LikedTrack.id`` and keep the
+    vote-row id on a separate field.
+    """
+    from addictune_sdk.models.track import LikedTrack
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, [liked_track_payload])
+
+    api = TracksAPI(mock_client, network="di")
+    result = await api.get_liked_track(user_id=13716939, track_id=2027566)
+
+    assert isinstance(result, LikedTrack)
+    # ``id`` is the *track* id, not the vote-row id.
+    assert result.id == 2027566
+    assert result.id != 999999
+    # Vote-row id is preserved separately.
+    assert result.track_vote_id == 999999
+    # Outer track_id mirrors the nested track id.
+    assert result.track_id == 2027566
+    # Outer metadata is preserved for filtering.
+    assert result.channel_id == 1
+    assert result.network_id == 1
+    assert result.position == 5
+    assert result.created_at == "2024-03-10T14:22:01-04:00"
+    assert result.updated_at == "2024-03-10T14:22:01-04:00"
+    # Nested track content still works.
+    assert result.title == "Adagio for Strings"
+    assert result.length == 424
+    assert result.up is True
+
+
+@pytest.mark.asyncio
+async def test_get_liked_track_handles_null_channel_id(mocker, liked_tracks_payload):
+    """``channel_id`` from the live API can be ``None`` for some rows."""
+    from addictune_sdk.models.track import LikedTrack
+
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, liked_tracks_payload)
+
+    api = TracksAPI(mock_client, network="di")
+    results = await api.get_liked_tracks(user_id=13716939)
+
+    assert len(results) == 2
+    assert all(isinstance(t, LikedTrack) for t in results)
+    # First row has a channel id, second doesn't (live API can return None).
+    assert results[0].channel_id == 1
+    assert results[1].channel_id is None
+    # Both ids must be the track ids, not the vote-row ids.
+    assert results[0].id == 2027566
+    assert results[0].track_vote_id == 999998
+    assert results[1].id == 3153063
+    assert results[1].track_vote_id == 999999
+
+
+@pytest.mark.asyncio
+async def test_get_liked_track_handles_single_object(mocker, liked_track_payload):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, liked_track_payload)
+
+    api = TracksAPI(mock_client, network="di")
+    result = await api.get_liked_track(user_id=13716939, track_id=2027566)
+
+    assert isinstance(result, Track)
+    assert result.id == 2027566
+
+
 # ── get_liked_tracks ─────────────────────────────────────────────────
 
 
