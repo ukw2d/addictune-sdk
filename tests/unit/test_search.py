@@ -2,10 +2,11 @@ import httpx
 import pytest
 
 from addictune_sdk.api.search import SearchAPI
+from addictune_sdk.models.channel import Channel
 from addictune_sdk.models.mixshow import MixShow
 from addictune_sdk.models.playlist import Playlist
 from addictune_sdk.models.search import SearchResults
-from tests.conftest import make_response
+from tests.conftest import load_fixture, make_response
 
 
 @pytest.mark.asyncio
@@ -48,4 +49,27 @@ async def test_query_rejects_blank_query(mocker):
         await SearchAPI(mock_client).query("  ")
 
     mock_client.get.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_query_accepts_channels_without_network_id_or_key(mocker):
+    """The live ``/search`` endpoint returns slimmed-down channel payloads.
+
+    ``network_id`` and ``key`` are omitted for channels in search results, so
+    they must be optional on :class:`Channel` or validation raises.
+    """
+    payload = load_fixture("search_trance.json")
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = make_response(200, payload)
+
+    result = await SearchAPI(mock_client, network="di").query("trance")
+
+    assert isinstance(result, SearchResults)
+    channel = result.channels.items[0]
+    assert isinstance(channel, Channel)
+    assert channel.id == 1
+    assert channel.network_id is None
+    assert channel.key is None
+    assert isinstance(result.shows.items[0], MixShow)
+    assert isinstance(result.playlists.items[0], Playlist)
 

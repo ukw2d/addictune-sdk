@@ -40,22 +40,24 @@ class Channel(BaseModel):
 
     Attributes:
         id: Numeric channel identifier.
-        key: URL-friendly channel key (e.g. ``"trance"``).
+        key: URL-friendly channel key (e.g. ``"trance"``). Optional because
+            the ``/search`` endpoint omits it from channel payloads.
         name: Human-readable channel name.
         description: Channel description.
-        network_id: ID of the parent network.
+        network_id: ID of the parent network. Optional because the ``/search``
+            endpoint omits it from channel payloads.
         artists: Artists associated with this channel.
         similar_channels: Channels recommended as similar.
         images: Channel artwork in various sizes.
     """
 
     id: int
-    key: str
+    key: str | None = None
     name: str
     description: str | None = None
     description_short: str | None = None
     description_long: str | None = None
-    network_id: int
+    network_id: int | None = None
     premium_id: int | None = None
     asset_url: AssetUrl = None
     banner_url: AssetUrl = None

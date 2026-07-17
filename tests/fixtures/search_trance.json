@@ -1,0 +1,42 @@
+{
+  "channels": {
+    "total": 1,
+    "items": [
+      {
+        "id": 1,
+        "name": "Trance",
+        "description": "The best in trance music.",
+        "images": {
+          "default": "//cdn.example.com/channels/trance.jpg"
+        }
+      }
+    ]
+  },
+  "shows": {
+    "total": 1,
+    "items": [
+      {
+        "id": 123,
+        "name": "Global Trance Sounds",
+        "slug": "global-trance-sounds",
+        "description": "Weekly trance show featuring the best in trance music",
+        "channels": [{ "id": 1, "name": "Trance" }]
+      }
+    ]
+  },
+  "playlists": {
+    "total": 1,
+    "items": [
+      {
+        "id": 9,
+        "name": "Trance Classics",
+        "slug": "trance-classics",
+        "track_count": 42
+      }
+    ]
+  },
+  "tracks": {
+    "total": 0,
+    "items": []
+  }
+}
