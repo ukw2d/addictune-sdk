@@ -21,7 +21,7 @@ extended with custom :class:`Network` instances passed to the
 :class:`Client` constructor.
 """
 
-from .client import AddictuneClient, Client
+from .client import Client
 from .config import AddictuneConfig
 from .exceptions import (
     AddictuneAPIError,
@@ -72,7 +72,6 @@ from .network_client import NetworkClient
 
 __all__ = [
     "Client",
-    "AddictuneClient",
     "AddictuneConfig",
     "AddictuneError",
     "AddictuneAuthError",

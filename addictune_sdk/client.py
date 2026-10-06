@@ -209,7 +209,3 @@ class Client:
 
     async def __aexit__(self, *_) -> None:
         await self.close()
-
-
-# Backward-compatible alias
-AddictuneClient = Client

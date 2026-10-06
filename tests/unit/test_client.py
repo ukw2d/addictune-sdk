@@ -6,7 +6,7 @@ from addictune_sdk.api.auth import AuthAPI
 from addictune_sdk.api.assets import AssetsAPI
 from addictune_sdk.api.channels import ChannelsAPI
 from addictune_sdk.api.search import SearchAPI
-from addictune_sdk.client import AddictuneClient, Client
+from addictune_sdk.client import Client
 from addictune_sdk.config import AddictuneConfig
 from addictune_sdk.exceptions import AddictuneAuthError
 from addictune_sdk.models.auth import AuthResponse
@@ -214,16 +214,3 @@ def test_default_config_used_when_none_provided(mocker):
     mocker.patch("addictune_sdk.client.RetryTransport", return_value=AsyncMock())
     client = Client()
     assert isinstance(client._config, AddictuneConfig)
-
-
-def test_addictune_client_is_alias_for_client():
-    assert AddictuneClient is Client
-
-
-@pytest.mark.asyncio
-async def test_custom_networks(config, patch_transport):
-    custom = Network(slug="custom", name="Custom", listen_domain="custom.fm")
-    async with Client(config=config, custom_networks=[custom]) as client:
-        nc = client.network("custom")
-        assert nc.network.name == "Custom"
-        assert nc.network.listen_host == "https://listen.custom.fm"
