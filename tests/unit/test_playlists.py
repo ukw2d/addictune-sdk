@@ -4,6 +4,7 @@ import pytest
 from addictune_sdk.api.playlists import PlaylistsAPI
 from addictune_sdk.exceptions import AddictuneAPIError
 from addictune_sdk.models.playlist import Playlist, PlaylistTracks
+from addictune_sdk.models.track import Track
 from tests.conftest import make_response
 
 # ── iter_playlists ───────────────────────────────────────────────────
@@ -89,6 +90,8 @@ async def test_get_content_returns_tracks(mocker, playlist_content_payload):
     assert isinstance(result, PlaylistTracks)
     assert result.id == 63662
     assert len(result.tracks) == 1
+    assert isinstance(result.tracks[0], Track)
+    assert result.tracks[0].url == "https://content.audioaddict.com/prd/3/c/1/1/f/track.mp3?purpose=playback"
     assert result.last_tracks == []
     assert result.current_progress is not None
     assert result.current_progress.played_tracks == 1

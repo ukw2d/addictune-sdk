@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, model_validator
 
 from .common import ImageSet
+from .track import Track
 
 
 class PlaylistTag(BaseModel):
@@ -81,8 +82,8 @@ class PlaylistTracks(BaseModel):
     """
 
     id: int
-    tracks: list[dict] = []
-    last_tracks: list[dict] = []
+    tracks: list[Track] = []
+    last_tracks: list[Track] = []
     current_progress: PlaylistProgress | None = None
 
     model_config = {"extra": "ignore"}

@@ -4,6 +4,7 @@ import pytest
 from addictune_sdk.api.mixshows import MixShowsAPI
 from addictune_sdk.exceptions import AddictuneAPIError, AddictuneNotFoundError
 from addictune_sdk.models.mixshow import MixShow, ShowEpisode
+from addictune_sdk.models.track import Artist, Track
 from tests.conftest import make_response
 
 # ── get_by_id ────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
     assert result.upcoming_event.id == 456
     assert len(result.channels) == 1
     assert result.channels[0].key == "trance"
+    assert result.artists == [Artist(id=1, name="DJ Trance", slug="dj-trance")]
     mock_client.get.assert_called_once_with("/di/shows/123", headers={})
 
 
@@ -178,6 +180,8 @@ async def test_iter_episodes_returns_episodes(mocker, show_episodes_payload):
     assert results[0].show is not None
     assert results[0].show.id == 123
     assert len(results[0].tracks) == 2
+    assert isinstance(results[0].tracks[0], Track)
+    assert results[0].tracks[0].id == show_episodes_payload[0]["tracks"][0]["id"]
     assert results[1].id == 790
     assert results[1].free is True
 

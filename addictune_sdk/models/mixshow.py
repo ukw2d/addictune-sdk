@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from .common import ImageSet
+from .track import Artist, Track
 
 
 class ShowChannel(BaseModel):
@@ -76,7 +77,7 @@ class MixShow(BaseModel):
     next_start_at: str | None = None
     next_end_at: str | None = None
     ondemand_episode_count: int | None = None
-    artists: list[dict] = []
+    artists: list[Artist] = []
     now_playing: bool = False
     upcoming_event: UpcomingEvent | None = None
     following: bool = False
@@ -115,6 +116,6 @@ class ShowEpisode(BaseModel):
     start_at: str | None = None
     end_at: str | None = None
     show: MixShow | None = None
-    tracks: list[dict] = []
+    tracks: list[Track] = []
 
     model_config = {"extra": "ignore"}
