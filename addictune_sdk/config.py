@@ -47,12 +47,10 @@ class CircuitConfig:
             circuit open.
         recovery_timeout: Seconds to wait before allowing a retry after
             the circuit has opened.
-        name: Optional label for logging / metrics.  ``None`` by default.
     """
 
     failure_threshold: int = 5
     recovery_timeout: float = 60.0
-    name: str | None = None
 
 
 @dataclass(frozen=True)

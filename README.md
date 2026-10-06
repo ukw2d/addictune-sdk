@@ -451,7 +451,6 @@ Controls the circuit-breaker that protects against cascading failures.
 |-------|------|---------|-------------|
 | `failure_threshold` | `int` | `5` | Consecutive failures before the circuit opens |
 | `recovery_timeout` | `float` | `60.0` | Seconds before a tripped circuit allows a retry |
-| `name` | `str \| None` | `None` | Optional label for logging / metrics |
 
 ---
 

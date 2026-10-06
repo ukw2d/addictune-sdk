@@ -71,14 +71,12 @@ class RetryTransport(AsyncHTTPTransport):
         super().__init__()
         config = config or AddictuneConfig()
         self._rc = config.retry
-        self._cc = config.circuit
         self._breaker = _CircuitBreaker(
-            failure_threshold=self._cc.failure_threshold,
-            recovery_timeout=self._cc.recovery_timeout,
+            failure_threshold=config.circuit.failure_threshold,
+            recovery_timeout=config.circuit.recovery_timeout,
         )
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        body = await request.aread()
         last_error: Exception | None = None
         url = str(request.url)
 
@@ -88,7 +86,7 @@ class RetryTransport(AsyncHTTPTransport):
                 raise httpx.ConnectError("Circuit breaker is open")
 
             try:
-                response = await self._send(request, body)
+                response = await super().handle_async_request(request)
                 self._breaker.record_success()
                 if attempt > 1:
                     logger.info(
@@ -130,15 +128,3 @@ class RetryTransport(AsyncHTTPTransport):
             last_error,
         )
         raise last_error  # type: ignore[misc]
-
-    async def _send(self, request: httpx.Request, body: bytes) -> httpx.Response:
-        return await AsyncHTTPTransport.handle_async_request(
-            self,
-            httpx.Request(
-                method=request.method,
-                url=request.url,
-                headers=request.headers,
-                extensions=request.extensions,
-                content=body,
-            ),
-        )
