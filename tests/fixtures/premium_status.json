@@ -1,9 +1,0 @@
-{
-  "listener_type": "premium",
-  "territories": [],
-  "window_unit": "hours",
-  "window_duration": 1,
-  "limit": 15,
-  "skips_remaining": null,
-  "expires_at": null
-}

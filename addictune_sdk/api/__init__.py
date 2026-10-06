@@ -5,7 +5,6 @@ from .mixshows import MixShowsAPI
 from .playlists import PlaylistsAPI
 from .search import SearchAPI
 from .tracks import TracksAPI
-from .user import UserAPI
 
 __all__ = [
     "AssetsAPI",
@@ -15,5 +14,4 @@ __all__ = [
     "PlaylistsAPI",
     "SearchAPI",
     "TracksAPI",
-    "UserAPI",
 ]

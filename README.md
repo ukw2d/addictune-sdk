@@ -37,7 +37,6 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 | **Playlists**| Featured playlists, browse by popularity/newest, get tracks, follow, listen history |
 | **Mix Shows**| Browse shows, iterate episodes, upcoming events, follow/unfollow shows           |
 | **Search**   | Search channels, shows, playlists, and tracks within a network                  |
-| **User**     | Ping API, check premium status, payment methods                                  |
 
 ---
 
@@ -209,17 +208,6 @@ for show in results.shows.items:
     print(show.name)
 ```
 
-### User
-
-```python
-# Health check
-ping = await client.user.ping()
-print(f"API v{ping.api_version} — {ping.country}")
-
-# Premium status for a network
-status = await client.user.check_premium_status("di")
-print(status.listener_type, status.skips_remaining)
-```
 
 ---
 

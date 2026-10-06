@@ -3,7 +3,7 @@ import logging
 import httpx
 from pydantic import SecretStr
 
-from .api import AssetsAPI, UserAPI
+from .api import AssetsAPI
 from .config import AddictuneConfig
 from .exceptions import AddictuneAuthError
 from .models.auth import AuthResponse
@@ -83,7 +83,6 @@ class Client:
 
         # Client-level APIs (no network scope needed)
         self.assets = AssetsAPI(self._public_http_client)
-        self.user = UserAPI(self._http_client)
 
         logger.debug(
             "Client initialised (api_base=%s, network=%s, timeout=%.1fs)",

@@ -160,18 +160,3 @@ def playlist_content_payload():
 @pytest.fixture
 def playlists_followed_payload():
     return load_fixture("playlists_followed.json")
-
-
-@pytest.fixture
-def ping_payload():
-    return load_fixture("ping.json")
-
-
-@pytest.fixture
-def payment_method_payload():
-    return load_fixture("payment_method.json")
-
-
-@pytest.fixture
-def premium_status_payload():
-    return load_fixture("premium_status.json")

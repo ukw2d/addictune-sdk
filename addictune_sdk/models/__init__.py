@@ -26,7 +26,6 @@ from .track import (
     SkipEvent,
     Track,
 )
-from .user import PaymentMethod, PaymentType, Ping, PremiumStatus
 
 __all__ = [
     "Artist",
@@ -41,14 +40,10 @@ __all__ = [
     "LikedTrack",
     "MixShow",
     "Network",
-    "PaymentMethod",
-    "PaymentType",
     "Playlist",
     "PlaylistProgress",
     "PlaylistTag",
     "PlaylistTracks",
-    "Ping",
-    "PremiumStatus",
     "RoutineTrack",
     "SearchBucket",
     "SearchResults",
