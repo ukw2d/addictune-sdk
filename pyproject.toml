@@ -50,6 +50,9 @@ dependencies = [
 [tool.hatch.build.targets.wheel]
 packages = ["addictune_sdk"]
 
+[tool.hatch.build.targets.sdist]
+exclude = [".beads", ".claude", ".github", "docs", "uv.lock", "AGENTS.md", "CLAUDE.md"]
+
 [dependency-groups]
 dev = [
     "pytest>=9",
