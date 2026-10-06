@@ -1,7 +1,5 @@
 """Network model and built-in registry for AudioAddict radio networks."""
 
-from __future__ import annotations
-
 from pydantic import BaseModel, model_validator
 
 STREAM_QUALITIES: dict[str, str] = {
@@ -29,13 +27,12 @@ class Network(BaseModel):
 
     model_config = {"frozen": True}
 
-    @model_validator(mode="after")
-    def _derive_listen_host(self) -> Network:
-        if not self.listen_host:
-            object.__setattr__(
-                self, "listen_host", f"https://listen.{self.listen_domain}"
-            )
-        return self
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_listen_host(cls, data: dict) -> dict:
+        if not data.get("listen_host"):
+            return {**data, "listen_host": f"https://listen.{data['listen_domain']}"}
+        return data
 
 
 # ── Built-in networks ────────────────────────────────────────────
