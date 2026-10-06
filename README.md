@@ -221,10 +221,10 @@ for show in results.shows.items:
 |-------------------|-----------------|
 | `di`              | DI.FM           |
 | `radiotunes`      | RadioTunes      |
-| `rockradio`       | RockRadio       |
-| `jazzradio`       | JazzRadio       |
-| `classicalradio`  | ClassicalRadio  |
-| `zenradio`        | ZenRadio        |
+| `rockradio`       | Rock Radio      |
+| `jazzradio`       | Jazz Radio      |
+| `classicalradio`  | Classical Radio |
+| `zenradio`        | Zen Radio       |
 
 Add custom networks via the `custom_networks` parameter on `Client`.
 
