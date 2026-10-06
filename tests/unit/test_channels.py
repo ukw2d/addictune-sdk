@@ -174,7 +174,6 @@ async def test_get_all_channel_extra_fields_ignored(mocker):
 @pytest.mark.asyncio
 async def test_get_by_id_returns_channel(mocker, channel_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -194,7 +193,6 @@ async def test_get_by_id_uses_etag_cache(mocker, channel_payload):
         "addictune_sdk.api._helpers.cache.get_etag",
         return_value=('"v1"', channel_payload),
     )
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)

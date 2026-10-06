@@ -48,7 +48,7 @@ class ChannelsAPI:
         network if data hasn't changed.
         """
         return await cached_get_list(
-            self._client, f"/{self._network}/channels", Channel, id_field="id"
+            self._client, f"/{self._network}/channels", Channel
         )
 
     async def get_by_id(self, channel_id: int) -> Channel:
@@ -61,7 +61,6 @@ class ChannelsAPI:
             self._client,
             f"/{self._network}/channels/{channel_id}",
             Channel,
-            index_key=f"/{self._network}/channels/id={channel_id}",
         )
 
     async def get_filter(self, key: str) -> ChannelFilter:

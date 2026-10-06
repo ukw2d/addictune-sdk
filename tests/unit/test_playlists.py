@@ -17,7 +17,6 @@ from tests.conftest import make_response
 async def test_get_featured_returns_playlists(mocker, playlists_featured_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-    mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlists_featured_payload)
@@ -45,7 +44,6 @@ async def test_get_featured_returns_playlists(mocker, playlists_featured_payload
 async def test_get_featured_uses_network_in_url(mocker, playlists_featured_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-    mocker.patch("addictune_sdk.api._helpers.cache.index_list")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.get.return_value = make_response(200, playlists_featured_payload)
@@ -132,7 +130,6 @@ async def test_iter_playlists_rejects_zero_per_page(mocker):
 @pytest.mark.asyncio
 async def test_get_by_id_returns_playlist(mocker, playlist_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -154,7 +151,6 @@ async def test_get_by_id_returns_playlist(mocker, playlist_payload):
 @pytest.mark.asyncio
 async def test_get_by_id_uses_network_in_url(mocker, playlist_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)

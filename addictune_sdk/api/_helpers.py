@@ -1,7 +1,7 @@
 """Shared request helpers used across API namespace classes."""
 
 from collections.abc import AsyncIterator
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import BaseModel
@@ -13,96 +13,60 @@ from ..headers import ResponseHeaders
 T = TypeVar("T", bound=BaseModel)
 
 
+async def _conditional_get(
+    client: httpx.AsyncClient, url: str, params: dict | None = None
+) -> tuple[Any, int | None]:
+    """ETag-cached GET returning ``(json_data, total_pages)``.
+
+    Sends ``If-None-Match`` when an ETag is cached and serves the cached body
+    on 304.  ``total_pages`` comes from the ``paginate-pages`` header and is
+    ``None`` on a 304 because headers are not cached.
+    """
+    key = str(client.build_request("GET", url, params=params).url) if params else url
+    etag, cached_data = cache.get_etag(key)
+    headers = {"If-None-Match": etag} if etag else {}
+    kwargs = {"params": params} if params else {}
+    response = await client.get(url, headers=headers, **kwargs)
+
+    if response.status_code == 304 and cached_data is not None:
+        return cached_data, None
+
+    await raise_for_status(response)
+    data = response.json()
+    rh = ResponseHeaders.model_validate(dict(response.headers))
+    if rh.etag:
+        cache.set_etag(key, rh.etag, data, ttl=rh.ttl)
+    return data, rh.paginate_pages
+
+
 async def cached_get_list(
     client: httpx.AsyncClient,
     url: str,
     model: type[T],
-    id_field: str | None = None,
     params: dict | None = None,
     use_cache: bool = True,
 ) -> list[T]:
-    """ETag-cached GET that returns a list of validated models.
-
-    1. Checks the ETag cache for *url*.
-    2. Sends ``If-None-Match`` if a cached ETag exists.
-    3. On 304, returns models validated from cached data.
-    4. On success, stores the new ETag, indexes items (if *id_field*
-       is given), and returns validated models.
+    """ETag-cached GET returning a list of validated models.
 
     Set *use_cache* to ``False`` for volatile endpoints whose data changes
-    faster than the server's ETag/Cache-Control lifetime can reflect
-    (e.g. ``/events/upcoming``, ``/currently_playing``).  When disabled,
-    no ``If-None-Match`` is sent, no cache read/write occurs, and a fresh
-    response is always returned.
+    faster than the server's ETag/Cache-Control lifetime reflects (e.g.
+    ``/events/upcoming``, ``/currently_playing``).  When disabled, no
+    ``If-None-Match`` is sent and no cache read/write occurs.
     """
-    if not use_cache:
-        if params:
-            response = await client.get(url, params=params)
-        else:
-            response = await client.get(url)
-        await raise_for_status(response)
-        return [model.model_validate(item) for item in response.json()]
-
-    cache_key = (
-        str(client.build_request("GET", url, params=params).url) if params else url
-    )
-    etag, cached_data = cache.get_etag(cache_key)
-
-    headers = {"If-None-Match": etag} if etag else {}
-    if params:
-        response = await client.get(url, params=params, headers=headers)
+    if use_cache:
+        data, _ = await _conditional_get(client, url, params)
     else:
-        response = await client.get(url, headers=headers)
-
-    if response.status_code == 304 and cached_data is not None:
-        return [model.model_validate(item) for item in cached_data]
-
-    await raise_for_status(response)
-    data = response.json()
-    rh = ResponseHeaders.model_validate(dict(response.headers))
-
-    if rh.etag:
-        ttl = cache.resolve_ttl(rh.ttl)
-        cache.set_etag(cache_key, rh.etag, data, ttl=ttl)
-        if id_field:
-            cache.index_list(cache_key, data, id_field=id_field, ttl=ttl)
-
+        response = await client.get(url, **({"params": params} if params else {}))
+        await raise_for_status(response)
+        data = response.json()
     return [model.model_validate(item) for item in data]
 
 
 async def cached_get_object(
-    client: httpx.AsyncClient,
-    url: str,
-    model: type[T],
-    index_key: str | None = None,
+    client: httpx.AsyncClient, url: str, model: type[T]
 ) -> T:
-    """ETag-cached GET that returns a single validated model.
-
-    If *index_key* is given, checks the item index first (populated
-    by :func:`cached_get_list` with ``id_field``).  Falls back to
-    HTTP + ETag caching on miss.
-    """
-    # Try the item index first (populated from a previous list fetch)
-    if index_key:
-        indexed = cache.get_indexed(index_key)
-        if indexed is not None:
-            return model.model_validate(indexed)
-
-    etag, cached_data = cache.get_etag(url)
-
-    headers = {"If-None-Match": etag} if etag else {}
-    response = await client.get(url, headers=headers)
-
-    if response.status_code == 304 and cached_data is not None:
-        return model.model_validate(cached_data)
-
-    await raise_for_status(response)
-    data = response.json()
-    rh = ResponseHeaders.model_validate(dict(response.headers))
-
-    if rh.etag:
-        cache.set_etag(url, rh.etag, data, ttl=cache.resolve_ttl(rh.ttl))
-
+    """ETag-cached GET returning a single validated model."""
+    data, _ = await _conditional_get(client, url)
     return model.model_validate(data)
 
 
@@ -116,34 +80,15 @@ async def _fetch_page(
     params: dict | None = None,
     unwrap_key: str | None = None,
 ) -> tuple[list, int | None]:
-    """ETag-cached GET returning (raw_items, total_pages).
+    """ETag-cached GET returning ``(raw_items, total_pages)``.
 
-    ``total_pages`` comes from the ``paginate-pages`` response header
-    and is ``None`` on 304 (cache hit) since headers aren't available.
-
-    If *unwrap_key* is given and the response is a dict, extracts the
-    list under that key (e.g. ``"results"`` for envelope responses).
+    If *unwrap_key* is set and the response is a dict, the item list is
+    extracted from that key (e.g. ``"results"`` for envelope responses).
     """
-    etag, cached_data = cache.get_etag(
-        str(client.build_request("GET", url, params=params).url)
-    )
-    headers = {"If-None-Match": etag} if etag else {}
-    response = await client.get(url, params=params, headers=headers)
-
-    if response.status_code == 304 and cached_data is not None:
-        if unwrap_key and isinstance(cached_data, dict):
-            return cached_data.get(unwrap_key, cached_data), None
-        return cached_data, None
-
-    await raise_for_status(response)
-    data = response.json()
-    items = (
-        data.get(unwrap_key, data) if unwrap_key and isinstance(data, dict) else data
-    )
-    rh = ResponseHeaders.model_validate(dict(response.headers))
-    if rh.etag:
-        cache.set_etag(str(response.url), rh.etag, data, ttl=cache.resolve_ttl(rh.ttl))
-    return items, rh.paginate_pages
+    data, total_pages = await _conditional_get(client, url, params)
+    if unwrap_key and isinstance(data, dict):
+        data = data.get(unwrap_key, data)
+    return data, total_pages
 
 
 async def paginate(

@@ -31,7 +31,6 @@ class PlaylistsAPI:
             self._client,
             f"/{self._network}/playlist_collections/name/homepage-featured",
             Playlist,
-            id_field="id",
         )
 
     def iter_playlists(
@@ -83,7 +82,6 @@ class PlaylistsAPI:
             self._client,
             f"/{self._network}/playlists/{playlist_id}",
             Playlist,
-            index_key=f"/{self._network}/playlists/id={playlist_id}",
         )
 
     async def get_content(self, playlist_id: int) -> PlaylistTracks:

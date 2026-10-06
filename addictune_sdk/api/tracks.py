@@ -31,7 +31,7 @@ class TracksAPI:
     async def get_qualities(self) -> list[AudioQuality]:
         """Return the available audio quality tiers for this network."""
         return await cached_get_list(
-            self._client, f"/{self._network}/qualities", AudioQuality, id_field="id"
+            self._client, f"/{self._network}/qualities", AudioQuality
         )
 
     async def get_preferred_quality(self, user_id: int) -> CurrentAudioQuality:
@@ -70,7 +70,6 @@ class TracksAPI:
             self._client,
             f"/{self._network}/tracks/{track_id}",
             Track,
-            index_key=f"/{self._network}/tracks/id={track_id}",
         )
 
     async def get_liked_track(self, user_id: int, track_id: int) -> Track | None:

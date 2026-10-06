@@ -12,7 +12,6 @@ from tests.conftest import make_response
 @pytest.mark.asyncio
 async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
@@ -38,7 +37,6 @@ async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
 @pytest.mark.asyncio
 async def test_get_by_id_uses_network_in_url(mocker, mixshow_payload):
     mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.get_indexed", return_value=None)
     mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
 
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
