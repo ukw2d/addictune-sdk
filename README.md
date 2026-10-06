@@ -99,6 +99,18 @@ async with Client(session_key="your-session-key") as client:
     ...
 ```
 
+Sessions are per network. Log in to a specific network, or restore persisted ones:
+
+```python
+await client.login("[EMAIL_REDACTED]", "your-password", network="rockradio")
+
+client.set_session("di", "saved-session-key", listen_key="saved-listen-key")
+client.has_session("di")  # True
+await client.ensure_session("radiotunes")  # mints one from the stored credentials
+```
+
+A wrong username/password raises `AddictuneAuthError`.
+
 ---
 
 ## Network-scoped APIs
@@ -237,16 +249,7 @@ Add custom networks via the `custom_networks` parameter on `Client`.
 
 The SDK uses a frozen dataclass (`AddictuneConfig`) with sensible defaults. Configuration is explicit and controlled entirely by the host application.
 
-`AddictuneConfig` is a plain Python `frozen=True` dataclass — every field has a default, so it works out of the box with zero setup. Override only what you need, using whichever approach fits your application.
-
-There are four ways to configure the SDK, in order of precedence:
-
-| Approach | When to use |
-|----------|-------------|
-| **No config** | Scripts, prototypes — defaults are production-ready |
-| **Programmatic** | Desktop apps with their own settings layer (QSettings, NSUserDefaults, etc.) |
-| **JSON file** | File-based settings, shared configs, deployment overrides |
-| **Auto-discovery** | Let the SDK find a config file in standard OS locations automatically |
+`AddictuneConfig` is a plain Python `frozen=True` dataclass — every field has a default, so it works out of the box with zero setup. Override only what you need from your application's own settings layer; the SDK never reads files or environment variables.
 
 ### Defaults only
 
@@ -322,102 +325,6 @@ config = replace(AddictuneConfig(), timeout=10.0, network="jazzradio")
 ```
 
 This is equivalent to `AddictuneConfig(timeout=10.0, network="jazzradio")` but reads more naturally when you're overriding a value you already have.
-
-### JSON config file
-
-Load config from a JSON file when your application prefers file-based settings:
-
-```python
-from addictune_sdk import Client, AddictuneConfig
-
-config = AddictuneConfig.from_json("~/.config/myapp/addictune.json")
-async with Client(config=config) as client:
-    ...
-```
-
-All fields are optional — missing keys fall back to their defaults, so your JSON only needs the overrides:
-
-```json
-{
-  "network": "di",
-  "timeout": 15.0
-}
-```
-
-Full example with every field:
-
-```json
-{
-  "api_base": "https://api.audioaddict.com/v1",
-  "network": "di",
-  "timeout": 30.0,
-  "retry": {
-    "max_attempts": 3,
-    "wait_multiplier": 1.0,
-    "wait_min": 2.0,
-    "wait_max": 10.0,
-    "wait_jitter": 1.0
-  },
-  "circuit": {
-    "failure_threshold": 5,
-    "recovery_timeout": 60.0
-  }
-}
-```
-
-#### Write a config file from code
-
-Persist settings for later use:
-
-```python
-from addictune_sdk import AddictuneConfig
-
-config = AddictuneConfig(timeout=15.0, network="rockradio")
-config.to_json("path/to/config.json")
-```
-
-`to_json` creates parent directories automatically if they don't exist.
-
-#### Round-trip: read → modify → write
-
-```python
-from addictune_sdk import AddictuneConfig
-
-# Load existing config
-config = AddictuneConfig.from_json("config.json")
-
-# Modify with dataclasses.replace
-from dataclasses import replace
-config = replace(config, timeout=20.0)
-
-# Save back
-config.to_json("config.json")
-```
-
-### Auto-discovery
-
-`load_config()` searches standard OS config locations in order and returns the first file it finds. If nothing exists, it returns a default `AddictuneConfig()` — so your code never needs to handle "no config found" as a special case.
-
-| Platform | Search paths (in order) |
-|----------|-------------------------|
-| Linux / macOS | `$XDG_CONFIG_HOME/addictune/config.json`, `~/.addictune/config.json` |
-| Windows | `%APPDATA%\addictune\config.json` |
-
-```python
-from addictune_sdk import Client, load_config
-
-# Searches standard paths; falls back to defaults if no file exists
-config = load_config()
-
-async with Client(config=config) as client:
-    ...
-```
-
-Pass an explicit path to skip auto-discovery:
-
-```python
-config = load_config("/etc/myapp/addictune.json")
-```
 
 ### Configuration reference
 

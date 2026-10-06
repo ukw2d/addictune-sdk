@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-import json
-import os
-from dataclasses import asdict, dataclass, field, replace
-from pathlib import Path
-from typing import Any
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -57,14 +53,9 @@ class CircuitConfig:
 class AddictuneConfig:
     """SDK configuration with sensible defaults.
 
-    Pass an instance to :class:`Client` or let it auto-discover a JSON
-    config file via :func:`load_config`.
-
-    All fields have defaults so you can instantiate a blank
-    ``AddictuneConfig()`` for production-ready settings, then override
-    only the fields you need — either via the constructor, via
-    :func:`dataclasses.replace`, from a JSON file, or through
-    :func:`load_config` auto-discovery.
+    Pass an instance to :class:`Client`.  All fields have defaults, so a
+    blank ``AddictuneConfig()`` gives production-ready settings; override
+    only the fields you need via the constructor.
 
     Attributes:
         api_base: Base URL of the AudioAddict API.
@@ -79,97 +70,3 @@ class AddictuneConfig:
     timeout: float = 30.0
     retry: RetryConfig = field(default_factory=RetryConfig)
     circuit: CircuitConfig = field(default_factory=CircuitConfig)
-
-    @classmethod
-    def from_json(cls, path: str | Path) -> AddictuneConfig:
-        """Load config from a JSON file, merging over defaults.
-
-        Missing keys in the JSON file fall back to their default values,
-        so you only need to specify the fields you want to override.
-
-        Args:
-            path: Path to a JSON file.  ``~`` is expanded automatically.
-
-        Returns:
-            A fully-resolved :class:`AddictuneConfig` instance.
-        """
-        raw = json.loads(Path(path).expanduser().read_text(encoding="utf-8"))
-        return cls._from_dict(raw)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Serialise the config to a plain dict (suitable for JSON)."""
-        return asdict(self)
-
-    def to_json(self, path: str | Path) -> None:
-        """Write the config to a JSON file.
-
-        Creates parent directories if they don't exist.
-
-        Args:
-            path: Destination file path.  ``~`` is expanded automatically.
-        """
-        p = Path(path).expanduser()
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(
-            json.dumps(self.to_dict(), indent=2),
-            encoding="utf-8",
-        )
-
-    @classmethod
-    def _from_dict(cls, data: dict[str, Any]) -> AddictuneConfig:
-        data = dict(data)
-        retry = RetryConfig(**data.pop("retry", {}))
-        circuit = CircuitConfig(**data.pop("circuit", {}))
-        return cls(**data, retry=retry, circuit=circuit)
-
-
-def _default_config_paths() -> list[Path]:
-    """XDG / platform-compatible config search paths."""
-    paths: list[Path] = []
-
-    xdg = os.environ.get("XDG_CONFIG_HOME")
-    base = Path(xdg) if xdg else Path.home() / ".config"
-    paths.append(base / "addictune" / "config.json")
-    paths.append(Path.home() / ".addictune" / "config.json")
-
-    appdata = os.environ.get("APPDATA")
-    if appdata:
-        paths.append(Path(appdata) / "addictune" / "config.json")
-
-    return paths
-
-
-def load_config(path: str | Path | None = None) -> AddictuneConfig:
-    """Load config from *path*, auto-discover, or fall back to defaults.
-
-    Resolution order:
-
-    1. If *path* is given, load that file directly.
-    2. Otherwise search standard OS config locations (see below).
-    3. If no file is found, return ``AddictuneConfig()`` (all defaults).
-
-    Auto-discovery search paths:
-
-    ====================  ===============================================
-    Platform              Paths (in order)
-    ====================  ===============================================
-    Linux / macOS         ``$XDG_CONFIG_HOME/addictune/config.json``,
-                           ``~/.addictune/config.json``
-    Windows               ``%APPDATA%\\addictune\\config.json``
-    ====================  ===============================================
-
-    Args:
-        path: Explicit path to a JSON config file, or ``None`` to
-            trigger auto-discovery.
-
-    Returns:
-        A resolved :class:`AddictuneConfig` instance.
-    """
-    if path is not None:
-        return AddictuneConfig.from_json(path)
-
-    for p in _default_config_paths():
-        if p.exists():
-            return AddictuneConfig.from_json(p)
-
-    return AddictuneConfig()
