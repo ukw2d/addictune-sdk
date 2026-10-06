@@ -414,4 +414,4 @@ Semantic versioning. While the SDK is below 1.0, breaking changes bump the minor
 
 ## Disclaimer
 
-This project is not affiliated with, endorsed by, or connected to AudioAddict Inc., Digitally Imported (DI.FM), RadioTunes, RockRadio, JazzRadio, ClassicalRadio, or ZenRadio. All trademarks belong to their respective owners.
+This project is not affiliated with, endorsed by, or connected to AudioAddict Inc., Digitally Imported (DI.FM), RadioTunes, Rock Radio, Jazz Radio, Classical Radio, or Zen Radio. All trademarks belong to their respective owners.

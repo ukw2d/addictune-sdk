@@ -52,8 +52,7 @@ def configure(*, enabled: bool = True, cache_dir: str | Path | None = None) -> N
     """
     global _conn, _cache_dir, _enabled
     _enabled = enabled
-    if cache_dir is not None:
-        _cache_dir = Path(cache_dir)
+    _cache_dir = Path(cache_dir) if cache_dir else user_cache_path("addictune_sdk")
     if _conn is not None:
         _conn.close()
         _conn = None

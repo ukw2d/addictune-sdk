@@ -25,8 +25,7 @@ async def _conditional_get(
     key = str(client.build_request("GET", url, params=params).url) if params else url
     etag, cached_data = cache.get_etag(key)
     headers = {"If-None-Match": etag} if etag else {}
-    kwargs = {"params": params} if params else {}
-    response = await client.get(url, headers=headers, **kwargs)
+    response = await client.get(url, params=params, headers=headers)
 
     if response.status_code == 304 and cached_data is not None:
         return cached_data, None
@@ -56,7 +55,7 @@ async def cached_get_list(
     if use_cache:
         data, _ = await _conditional_get(client, url, params)
     else:
-        response = await client.get(url, **({"params": params} if params else {}))
+        response = await client.get(url, params=params)
         await raise_for_status(response)
         data = response.json()
     return [model.model_validate(item) for item in data]

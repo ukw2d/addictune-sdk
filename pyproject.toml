@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "addictune-sdk"
 version = "0.4.0"
-description = "Async Python SDK for the AudioAddict radio platform (DI.FM, RadioTunes, RockRadio, JazzRadio, ClassicalRadio, ZenRadio)"
+description = "Async Python SDK for the AudioAddict radio platform (DI.FM, RadioTunes, Rock Radio, Jazz Radio, Classical Radio, Zen Radio)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"

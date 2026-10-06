@@ -183,7 +183,7 @@ async def test_get_by_id_returns_channel(mocker, channel_payload):
 
     assert isinstance(result, Channel)
     assert result.key == "trance"
-    mock_client.get.assert_called_once_with("/di/channels/1", headers={})
+    mock_client.get.assert_called_once_with("/di/channels/1", params=None, headers={})
 
 
 @pytest.mark.asyncio
@@ -224,9 +224,7 @@ async def test_get_filter_returns_channel_filter(mocker, channel_filter_payload)
     assert result.name == "Popular"
     assert [channel.key for channel in result.channels] == ["trance", "house"]
     assert all(isinstance(channel, Channel) for channel in result.channels)
-    mock_client.get.assert_called_once_with(
-        "/di/channel_filters/key/popular", headers={}
-    )
+    mock_client.get.assert_called_once_with("/di/channel_filters/key/popular", params=None, headers={})
 
 
 @pytest.mark.asyncio
@@ -240,9 +238,7 @@ async def test_get_filter_uses_network_in_url(mocker, channel_filter_payload):
     api = ChannelsAPI(mock_client, network="rockradio")
     await api.get_filter("popular")
 
-    mock_client.get.assert_called_once_with(
-        "/rockradio/channel_filters/key/popular", headers={}
-    )
+    mock_client.get.assert_called_once_with("/rockradio/channel_filters/key/popular", params=None, headers={})
 
 
 @pytest.mark.asyncio
@@ -296,7 +292,7 @@ async def test_get_track_history_returns_entries(mocker, track_history_payload):
     assert result[0].track_id == 3153063
     assert result[0].votes.up == 7
     assert result[0].votes.down == 1
-    mock_client.get.assert_called_once_with("/di/track_history/channel/1", headers={})
+    mock_client.get.assert_called_once_with("/di/track_history/channel/1", params=None, headers={})
 
 
 # ── get_currently_playing ────────────────────────────────────────────
@@ -398,9 +394,7 @@ async def test_get_favorites_returns_liked_channels(mocker, favorites_payload):
     assert len(result) == 3
     assert isinstance(result[0], LikedChannelID)
     assert result[0].channel_id == 522
-    mock_client.get.assert_called_once_with(
-        "/di/members/13716939/favorites/channels", headers={}
-    )
+    mock_client.get.assert_called_once_with("/di/members/13716939/favorites/channels", params=None, headers={})
 
 
 @pytest.mark.asyncio

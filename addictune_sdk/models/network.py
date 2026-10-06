@@ -30,9 +30,9 @@ class Network(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _derive_listen_host(cls, data: dict) -> dict:
-        if not data.get("listen_host"):
-            return {**data, "listen_host": f"https://listen.{data['listen_domain']}"}
-        return data
+        if data.get("listen_host") or "listen_domain" not in data:
+            return data
+        return {**data, "listen_host": f"https://listen.{data['listen_domain']}"}
 
 
 # ── Built-in networks ────────────────────────────────────────────

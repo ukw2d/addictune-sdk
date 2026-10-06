@@ -32,7 +32,7 @@ async def test_get_by_id_returns_track(mocker, track_payload):
     # Full assets list preserved
     assert len(result.assets) == 2
     assert result.assets[1].content_quality_id == 5
-    mock_client.get.assert_called_once_with("/di/tracks/2027566", headers={})
+    mock_client.get.assert_called_once_with("/di/tracks/2027566", params=None, headers={})
 
 
 @pytest.mark.asyncio

@@ -15,3 +15,9 @@ def test_missing_server_ttl_falls_back_to_default(tmp_path, mocker):
     assert cache.get_etag("/u") == ('"e1"', {"a": 1})
     clock.return_value = 1000.0 + cache.DEFAULT_TTL + 1
     assert cache.get_etag("/u") == (None, None)
+
+
+def test_configure_without_cache_dir_resets_to_default(tmp_path):
+    cache.configure(cache_dir=tmp_path)
+    cache.configure()
+    assert cache._cache_dir != tmp_path

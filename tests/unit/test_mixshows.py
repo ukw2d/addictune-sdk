@@ -33,7 +33,7 @@ async def test_get_by_id_returns_mixshow(mocker, mixshow_payload):
     assert len(result.channels) == 1
     assert result.channels[0].key == "trance"
     assert result.artists == [Artist(id=1, name="DJ Trance", slug="dj-trance")]
-    mock_client.get.assert_called_once_with("/di/shows/123", headers={})
+    mock_client.get.assert_called_once_with("/di/shows/123", params=None, headers={})
 
 
 @pytest.mark.asyncio
