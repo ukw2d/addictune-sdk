@@ -214,3 +214,12 @@ def test_default_config_used_when_none_provided(mocker):
     mocker.patch("addictune_sdk.client.RetryTransport", return_value=AsyncMock())
     client = Client()
     assert isinstance(client._config, AddictuneConfig)
+
+
+@pytest.mark.asyncio
+async def test_custom_networks(config, patch_transport):
+    custom = Network(slug="custom", name="Custom", listen_domain="custom.fm")
+    async with Client(config=config, custom_networks=[custom]) as client:
+        nc = client.network("custom")
+        assert nc.network.name == "Custom"
+        assert nc.network.listen_host == "https://listen.custom.fm"

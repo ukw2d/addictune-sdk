@@ -96,28 +96,3 @@ class PlaylistTracks(BaseModel):
                 if not isinstance(val, list):
                     data[key] = []
         return data
-
-
-class PlaylistListenHistoryEntry(BaseModel):
-    """A single entry from playlist listen history.
-
-    Attributes:
-        track: The track that was listened to.
-        played_at: Timestamp of when it played.
-    """
-
-    track: Track
-    played_at: int | str | None = None
-
-    model_config = {"extra": "ignore"}
-
-    class Track(BaseModel):
-        id: int
-        title: str | None = None
-        display_title: str | None = None
-        display_artist: str | None = None
-        length: int | None = None
-        mix: bool = False
-        images: ImageSet | None = None
-
-        model_config = {"extra": "ignore"}

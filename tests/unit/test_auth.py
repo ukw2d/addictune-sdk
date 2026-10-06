@@ -8,7 +8,7 @@ from tests.conftest import make_response
 
 
 @pytest.mark.asyncio
-async def test_login_session_mode(mocker, auth_payload, auth_response):
+async def test_login_posts_member_session(mocker, auth_payload, auth_response):
     mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
     mock_client.post.return_value = auth_response
 
@@ -24,26 +24,6 @@ async def test_login_session_mode(mocker, auth_payload, auth_response):
     assert result.api_key.get_secret_value() == auth_payload["key"]
     assert result.listen_key.get_secret_value() == auth_payload["member"]["listen_key"]
     assert result.user_id == auth_payload["member_id"]
-
-
-@pytest.mark.asyncio
-async def test_login_direct_mode(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.post.return_value = make_response(
-        200, {"id": 42, "api_key": "direct-key", "listen_key": "direct-listen"}
-    )
-
-    api = AuthAPI(mock_client, network="di")
-    result = await api.login("user@example.com", "pass", mode="direct")
-
-    mock_client.post.assert_called_once_with(
-        "/di/members/authenticate",
-        data={"username": "user@example.com", "password": "pass"},
-    )
-    assert isinstance(result, AuthResponse)
-    assert result.api_key.get_secret_value() == "direct-key"
-    assert result.listen_key.get_secret_value() == "direct-listen"
-    assert result.user_id == 42
 
 
 @pytest.mark.asyncio

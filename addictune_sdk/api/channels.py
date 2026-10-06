@@ -8,7 +8,6 @@ from ..models.channel import (
     Channel,
     ChannelFilter,
     LikedChannelID,
-    ListenHistoryEntry,
     NowPlaying,
     TrackHistoryEntry,
 )
@@ -32,13 +31,11 @@ class ChannelsAPI:
         client: httpx.AsyncClient,
         network: str = "di",
         listen_host: str = "",
-        stream_qualities: dict[str, str] | None = None,
         public_client: httpx.AsyncClient | None = None,
     ):
         self._client = client
         self._network = network
         self._listen_host = listen_host
-        self._stream_qualities = stream_qualities or STREAM_QUALITIES
         self._public_client = public_client or client
 
     async def get_all(self) -> list[Channel]:
@@ -134,30 +131,6 @@ class ChannelsAPI:
         await raise_for_status(response)
         return ChannelTracklist.model_validate(response.json())
 
-    async def add_listen_history(self, channel_id: int, track_id: int) -> None:
-        """Record that a track was listened to on a channel.
-
-        Args:
-            channel_id: The channel the track played on.
-            track_id: The track that was listened to.
-        """
-        url = f"/{self._network}/listen_history"
-        response = await self._client.post(
-            url, json={"channel_id": channel_id, "track_id": track_id}
-        )
-        await raise_for_status(response)
-
-    async def get_listen_history(self, channel_id: int) -> list[ListenHistoryEntry]:
-        """Return the listen history for a channel.
-
-        Args:
-            channel_id: The numeric channel identifier.
-        """
-        url = f"/{self._network}/listen_history/{channel_id}"
-        response = await self._client.get(url)
-        await raise_for_status(response)
-        return [ListenHistoryEntry.model_validate(e) for e in response.json()]
-
     async def get_favorites(self, user_id: int) -> list[LikedChannelID]:
         """Return the list of channel IDs favorited by a user.
 
@@ -180,30 +153,6 @@ class ChannelsAPI:
         url = f"/{self._network}/members/{user_id}/favorites/channel/{channel_id}"
         response = await self._client.post(url, json={"id": channel_id})
         await raise_for_status(response)
-
-    async def get_favorite(
-        self, user_id: int, channel_id: int
-    ) -> LikedChannelID | None:
-        """Check if a channel is in the user's favorites.
-
-        Args:
-            user_id: The authenticated user's ID.
-            channel_id: The channel to check.
-
-        Returns:
-            :class:`~addictune_sdk.models.channel.LikedChannelID` if the
-            channel is a favorite, otherwise ``None``.
-        """
-        url = f"/{self._network}/members/{user_id}/favorites/channel/{channel_id}"
-        response = await self._client.get(url)
-        if response.status_code == 404:
-            return None
-        await raise_for_status(response)
-        data = response.json()
-        if not data:
-            return None
-        item = data[0] if isinstance(data, list) else data
-        return LikedChannelID.model_validate(item)
 
     async def remove_favorite(self, user_id: int, channel_id: int) -> None:
         """Remove a channel from the user's favorites.
@@ -232,7 +181,7 @@ class ChannelsAPI:
         Returns:
             A fully resolved streaming URL.
         """
-        quality_path = self._stream_qualities.get(quality, STREAM_QUALITIES["high"])
+        quality_path = STREAM_QUALITIES.get(quality, STREAM_QUALITIES["high"])
         return f"{self._listen_host}/{quality_path}/{channel_key}.pls?listen_key={listen_key}"
 
     async def resolve_stream_url(self, url: str) -> str:

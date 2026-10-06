@@ -11,7 +11,6 @@ from addictune_sdk.models.channel import (
     Channel,
     ChannelFilter,
     LikedChannelID,
-    ListenHistoryEntry,
     NowPlaying,
     TrackHistoryEntry,
 )
@@ -382,54 +381,6 @@ async def test_get_routine_returns_routine(mocker):
     assert call_params["tune_in"] == "true"
 
 
-# ── add_listen_history ───────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_add_listen_history_succeeds(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.post.return_value = make_response(201)
-
-    api = ChannelsAPI(mock_client, network="di")
-    await api.add_listen_history(channel_id=1, track_id=42)
-
-    mock_client.post.assert_called_once_with(
-        "/di/listen_history",
-        json={"channel_id": 1, "track_id": 42},
-    )
-
-
-@pytest.mark.asyncio
-async def test_add_listen_history_raises_on_error(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.post.return_value = make_response(500, text="Server Error")
-
-    api = ChannelsAPI(mock_client, network="di")
-    with pytest.raises(AddictuneAPIError):
-        await api.add_listen_history(channel_id=1, track_id=42)
-
-
-# ── get_listen_history ───────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_get_listen_history_returns_list(mocker):
-    history_data = [
-        {"track": {"id": 1, "title": "Foo"}, "played_at": "2026-01-01T00:00:00Z"}
-    ]
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, history_data)
-
-    api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_listen_history(1)
-
-    assert len(result) == 1
-    assert isinstance(result[0], ListenHistoryEntry)
-    assert result[0].track.id == 1
-    assert result[0].played_at == "2026-01-01T00:00:00Z"
-    mock_client.get.assert_called_once_with("/di/listen_history/1")
-
-
 # ── get_favorites ────────────────────────────────────────────────────
 
 
@@ -521,59 +472,6 @@ async def test_remove_favorite_raises_on_error(mocker):
     api = ChannelsAPI(mock_client, network="di")
     with pytest.raises(AddictuneNotFoundError):
         await api.remove_favorite(user_id=13716939, channel_id=999)
-
-
-# ── get_favorite ──────────────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_get_favorite_returns_liked_channel(mocker):
-    payload = {"channel_id": 1, "position": 0}
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, payload)
-
-    api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_favorite(user_id=13716939, channel_id=1)
-
-    assert isinstance(result, LikedChannelID)
-    assert result.channel_id == 1
-    assert result.position == 0
-    mock_client.get.assert_called_once_with("/di/members/13716939/favorites/channel/1")
-
-
-@pytest.mark.asyncio
-async def test_get_favorite_returns_none_on_404(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(404, text="Not Found")
-
-    api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_favorite(user_id=13716939, channel_id=999)
-
-    assert result is None
-
-
-@pytest.mark.asyncio
-async def test_get_favorite_returns_none_on_empty_response(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, [])
-
-    api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_favorite(user_id=13716939, channel_id=999)
-
-    assert result is None
-
-
-@pytest.mark.asyncio
-async def test_get_favorite_handles_list_response(mocker):
-    payload = [{"channel_id": 1, "position": 0}]
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, payload)
-
-    api = ChannelsAPI(mock_client, network="di")
-    result = await api.get_favorite(user_id=13716939, channel_id=1)
-
-    assert isinstance(result, LikedChannelID)
-    assert result.channel_id == 1
 
 
 # ── get_stream_url ────────────────────────────────────────────────────

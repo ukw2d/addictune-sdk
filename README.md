@@ -161,18 +161,11 @@ await di.tracks.vote(12345, direction="delete")
 # Iterate all liked tracks (auto-paginated)
 async for track in di.tracks.iter_liked_tracks(user_id):
     print(track.title)
-
-# Audio quality
-qualities = await di.tracks.get_qualities()
-await di.tracks.set_preferred_quality(user_id, quality_id=3)
 ```
 
 ### Playlists
 
 ```python
-# Featured playlists
-featured = await di.playlists.get_featured()
-
 # Browse with auto-pagination
 async for pl in di.playlists.iter_playlists(order_by="newest"):
     print(pl.name)

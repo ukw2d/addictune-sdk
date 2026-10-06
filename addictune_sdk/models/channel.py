@@ -167,17 +167,3 @@ class LikedChannelID(BaseModel):
     position: int | None = None
 
     model_config = {"extra": "ignore"}
-
-
-class ListenHistoryEntry(BaseModel):
-    """A single entry from channel listen history.
-
-    Attributes:
-        track: The track that was listened to.
-        played_at: ISO timestamp of when it played.
-    """
-
-    track: TrackHistoryEntry
-    played_at: str | None = None
-
-    model_config = {"extra": "ignore"}

@@ -3,14 +3,8 @@ from collections.abc import AsyncIterator
 import httpx
 
 from ..exceptions import raise_for_status
-from ..models.track import (
-    AudioQuality,
-    CurrentAudioQuality,
-    LikedTrack,
-    SkipEvent,
-    Track,
-)
-from ._helpers import cached_get_list, cached_get_object, paginate
+from ..models.track import LikedTrack, SkipEvent, Track
+from ._helpers import cached_get_object, paginate
 
 
 class TracksAPI:
@@ -19,44 +13,14 @@ class TracksAPI:
     Accessed via ``client.network("di").tracks``.
 
     Provides methods to get track details, manage liked tracks,
-    vote on tracks, report skips, and manage audio quality preferences.
+    vote on tracks, and report skips.
     """
 
     def __init__(self, client: httpx.AsyncClient, network: str = "di"):
         self._client = client
         self._network = network
 
-    # ── Qualities ────────────────────────────────────────────────
-
-    async def get_qualities(self) -> list[AudioQuality]:
-        """Return the available audio quality tiers for this network."""
-        return await cached_get_list(
-            self._client, f"/{self._network}/qualities", AudioQuality
-        )
-
-    async def get_preferred_quality(self, user_id: int) -> CurrentAudioQuality:
-        """Return the user's currently selected audio quality.
-
-        Args:
-            user_id: The authenticated user's ID.
-        """
-        return await cached_get_object(
-            self._client,
-            f"/{self._network}/members/{user_id}/preferred_quality",
-            CurrentAudioQuality,
-        )
-
-    async def set_preferred_quality(self, user_id: int, quality_id: int) -> None:
-        """Change the user's preferred audio quality.
-
-        Args:
-            user_id: The authenticated user's ID.
-            quality_id: The quality tier ID (from :meth:`get_qualities`).
-        """
-        url = f"/{self._network}/members/{user_id}/preferred_quality"
-        data = f"quality_id={quality_id}"
-        response = await self._client.post(url, content=data)
-        await raise_for_status(response)
+    
 
     # ── Tracks ───────────────────────────────────────────────────
 

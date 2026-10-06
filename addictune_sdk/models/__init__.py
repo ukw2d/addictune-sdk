@@ -4,7 +4,6 @@ from .channel import (
     ChannelArtist,
     ChannelFilter,
     LikedChannelID,
-    ListenHistoryEntry,
     NowPlaying,
     SimilarChannel,
     TrackHistoryEntry,
@@ -14,7 +13,6 @@ from .mixshow import MixShow, ShowChannel, ShowEpisode, UpcomingEvent
 from .network import BUILTIN_NETWORKS, Network
 from .playlist import (
     Playlist,
-    PlaylistListenHistoryEntry,
     PlaylistProgress,
     PlaylistTag,
     PlaylistTracks,
@@ -22,11 +20,7 @@ from .playlist import (
 from .search import SearchBucket, SearchResults
 from .track import (
     Artist,
-    AudioFormat,
-    AudioQuality,
-    AudioQualityDetail,
     ChannelTracklist,
-    CurrentAudioQuality,
     LikedTrack,
     RoutineTrack,
     SkipEvent,
@@ -36,9 +30,6 @@ from .user import PaymentMethod, PaymentType, Ping, PremiumStatus
 
 __all__ = [
     "Artist",
-    "AudioFormat",
-    "AudioQuality",
-    "AudioQualityDetail",
     "AuthResponse",
     "BUILTIN_NETWORKS",
     "Channel",
@@ -47,14 +38,12 @@ __all__ = [
     "ChannelTracklist",
     "AssetUrl",
     "ContentAsset",
-    "CurrentAudioQuality",
     "LikedTrack",
     "MixShow",
     "Network",
     "PaymentMethod",
     "PaymentType",
     "Playlist",
-    "PlaylistListenHistoryEntry",
     "PlaylistProgress",
     "PlaylistTag",
     "PlaylistTracks",
@@ -69,7 +58,6 @@ __all__ = [
     "ImageUrl",
     "ImageSet",
     "LikedChannelID",
-    "ListenHistoryEntry",
     "NowPlaying",
     "SimilarChannel",
     "Track",

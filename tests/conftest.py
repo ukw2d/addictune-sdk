@@ -118,16 +118,6 @@ def liked_tracks_payload():
 
 
 @pytest.fixture
-def qualities_payload():
-    return load_fixture("qualities.json")
-
-
-@pytest.fixture
-def preferred_quality_payload():
-    return load_fixture("preferred_quality.json")
-
-
-@pytest.fixture
 def mixshow_payload():
     return load_fixture("mixshow.json")
 
@@ -170,11 +160,6 @@ def playlist_content_payload():
 @pytest.fixture
 def playlists_followed_payload():
     return load_fixture("playlists_followed.json")
-
-
-@pytest.fixture
-def playlist_listen_history_payload():
-    return load_fixture("playlist_listen_history.json")
 
 
 @pytest.fixture

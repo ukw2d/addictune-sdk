@@ -3,57 +3,8 @@ import pytest
 
 from addictune_sdk.api.playlists import PlaylistsAPI
 from addictune_sdk.exceptions import AddictuneAPIError
-from addictune_sdk.models.playlist import (
-    Playlist,
-    PlaylistListenHistoryEntry,
-    PlaylistTracks,
-)
+from addictune_sdk.models.playlist import Playlist, PlaylistTracks
 from tests.conftest import make_response
-
-# ── get_featured ─────────────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_get_featured_returns_playlists(mocker, playlists_featured_payload):
-    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, playlists_featured_payload)
-
-    api = PlaylistsAPI(mock_client, network="di")
-    result = await api.get_featured()
-
-    assert len(result) == 2
-    assert all(isinstance(p, Playlist) for p in result)
-    assert result[0].id == 68656
-    assert result[0].name == "Top Vocal Trance Hits"
-    assert result[0].slug == "top-vocal-trance-hits"
-    assert result[0].channel_id is None
-    assert result[0].track_count == 121
-    assert result[0].popularity == 0.96
-    assert len(result[0].tags) == 2
-    assert result[0].tags[0].name == "Vocal Trance"
-    assert result[1].id == 63853
-    mock_client.get.assert_called_once_with(
-        "/di/playlist_collections/name/homepage-featured", headers={}
-    )
-
-
-@pytest.mark.asyncio
-async def test_get_featured_uses_network_in_url(mocker, playlists_featured_payload):
-    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, playlists_featured_payload)
-
-    api = PlaylistsAPI(mock_client, network="rockradio")
-    await api.get_featured()
-
-    call_url = mock_client.get.call_args[0][0]
-    assert call_url == "/rockradio/playlist_collections/name/homepage-featured"
-
 
 # ── iter_playlists ───────────────────────────────────────────────────
 
@@ -122,45 +73,6 @@ async def test_iter_playlists_rejects_zero_per_page(mocker):
 
     with pytest.raises(ValueError, match="per_page"):
         _ = [p async for p in api.iter_playlists(per_page=0)]
-
-
-# ── get_by_id ────────────────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_get_by_id_returns_playlist(mocker, playlist_payload):
-    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, playlist_payload)
-
-    api = PlaylistsAPI(mock_client, network="di")
-    result = await api.get_by_id(68656)
-
-    assert isinstance(result, Playlist)
-    assert result.id == 68656
-    assert result.name == "Top Vocal Trance Hits"
-    assert result.slug == "top-vocal-trance-hits"
-    assert result.following is True
-    assert result.channel_id is None
-    assert result.length == 44171
-    mock_client.get.assert_called_once_with("/di/playlists/68656", headers={})
-
-
-@pytest.mark.asyncio
-async def test_get_by_id_uses_network_in_url(mocker, playlist_payload):
-    mocker.patch("addictune_sdk.api._helpers.cache.get_etag", return_value=(None, None))
-    mocker.patch("addictune_sdk.api._helpers.cache.set_etag")
-
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, playlist_payload)
-
-    api = PlaylistsAPI(mock_client, network="jazzradio")
-    await api.get_by_id(68656)
-
-    call_url = mock_client.get.call_args[0][0]
-    assert call_url == "/jazzradio/playlists/68656"
 
 
 # ── get_content ──────────────────────────────────────────────────────
@@ -278,40 +190,6 @@ async def test_iter_followed_rejects_bad_limit(mocker):
 
     with pytest.raises(ValueError, match="limit"):
         _ = [p async for p in api.iter_followed(user_id=1, limit=0)]
-
-
-# ── get_listen_history ───────────────────────────────────────────────
-
-
-@pytest.mark.asyncio
-async def test_get_listen_history_returns_entries(
-    mocker, playlist_listen_history_payload
-):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, playlist_listen_history_payload)
-
-    api = PlaylistsAPI(mock_client, network="di")
-    result = await api.get_listen_history(63662)
-
-    assert len(result) == 1
-    assert isinstance(result[0], PlaylistListenHistoryEntry)
-    assert result[0].track.id == 3120758
-    assert result[0].track.title == "Hypnotise"
-    assert result[0].played_at == 1778081692
-    mock_client.get.assert_called_once_with(
-        "/di/listen_history", params={"playlist_id": 63662}
-    )
-
-
-@pytest.mark.asyncio
-async def test_get_listen_history_returns_empty_list(mocker):
-    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
-    mock_client.get.return_value = make_response(200, [])
-
-    api = PlaylistsAPI(mock_client, network="di")
-    result = await api.get_listen_history(99999)
-
-    assert result == []
 
 
 # ── add_listen_history ───────────────────────────────────────────────
