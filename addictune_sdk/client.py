@@ -140,30 +140,46 @@ class Client:
         """The session key for the default network, or ``None`` if not authenticated."""
         return self._session_keys.get(self._config.network)
 
-    async def login(self, email: str, password: str) -> AuthResponse:
-        """Authenticate with email and password.
+    async def login(
+        self, email: str, password: str, network: str | None = None
+    ) -> AuthResponse:
+        """Authenticate against *network* (default: configured network).
 
-        Stores the returned session key and listen key on this client
-        so that subsequent requests are automatically authenticated.
+        Stores the session key for that network, the account listen key, and
+        the credentials so :meth:`ensure_session` can mint sessions for other
+        networks on demand.
 
         Args:
             email: Account email address.
             password: Account password.
+            network: Network slug to authenticate against.
 
         Returns:
             :class:`AuthResponse` containing ``user_id``, ``api_key``,
             and ``listen_key``.
         """
+        slug = network or self._config.network
         self._credentials = (email, password)
-        auth = await self.network(self._config.network).auth.login(email, password)
-        self._session_keys[self._config.network] = auth.api_key.get_secret_value()
-        self._listen_key = SecretStr(auth.listen_key.get_secret_value())
-        logger.info(
-            "Login successful (user_id=%s, network=%s)",
-            auth.user_id,
-            self._config.network,
+        auth = await self.network(slug).auth.login(email, password)
+        self.set_session(
+            slug,
+            auth.api_key.get_secret_value(),
+            listen_key=auth.listen_key.get_secret_value(),
         )
+        logger.info("Login successful (user_id=%s, network=%s)", auth.user_id, slug)
         return auth
+
+    def set_session(
+        self, slug: str, session_key: str, listen_key: str | None = None
+    ) -> None:
+        """Restore a persisted session for *slug* without logging in."""
+        self._session_keys[slug] = session_key
+        if listen_key is not None:
+            self._listen_key = SecretStr(listen_key)
+
+    def has_session(self, slug: str) -> bool:
+        """Return whether a session key is held for *slug*."""
+        return slug in self._session_keys
 
     async def ensure_session(self, slug: str) -> None:
         """Sessions are per-network; mint one from stored credentials on demand.
@@ -180,8 +196,7 @@ class Client:
             raise AddictuneAuthError(
                 f"No session for {slug!r} and no credentials to mint one"
             )
-        auth = await self.network(slug).auth.login(*self._credentials)
-        self._session_keys[slug] = auth.api_key.get_secret_value()
+        await self.login(*self._credentials, network=slug)
 
     async def close(self) -> None:
         """Close the underlying HTTP connection pool."""

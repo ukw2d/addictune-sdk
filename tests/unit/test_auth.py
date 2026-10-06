@@ -74,4 +74,16 @@ async def test_login_forbidden_raises_auth_error(mocker):
 
     api = AuthAPI(mock_client, network="di")
     with pytest.raises(AddictuneAuthError):
+        await api.login("[EMAIL_REDACTED]", "pass")
+
+
+@pytest.mark.asyncio
+async def test_login_unprocessable_raises_auth_error(mocker):
+    """The API answers 422 for a wrong username/password."""
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.post.return_value = make_response(422, text="Invalid login")
+
+    api = AuthAPI(mock_client, network="di")
+    with pytest.raises(AddictuneAuthError, match="Invalid login"):
+        await api.login("[EMAIL_REDACTED]", "pass")
         await api.login("user@example.com", "pass")

@@ -2,7 +2,7 @@ from typing import Literal
 
 import httpx
 
-from ..exceptions import raise_for_status
+from ..exceptions import AddictuneAuthError, raise_for_status
 from ..models.auth import AuthResponse
 
 _APP_AUTH = httpx.BasicAuth("streams", "diradio")
@@ -49,5 +49,7 @@ class AuthAPI:
                 f"/{self._network}/members/authenticate",
                 data={"username": email, "password": password},
             )
+        if response.status_code == 422:  # API answers 422 for a bad username/password
+            raise AddictuneAuthError(response.text.strip() or response.reason_phrase)
         await raise_for_status(response)
         return AuthResponse.model_validate(response.json())

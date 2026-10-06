@@ -79,6 +79,34 @@ async def test_login_sets_session_key_property(
 
 
 @pytest.mark.asyncio
+async def test_login_for_other_network_stores_that_session(
+    mocker, config, patch_transport, auth_payload
+):
+    auth = AuthResponse.model_validate(auth_payload)
+    mock_login = mocker.patch.object(AuthAPI, "login", return_value=auth)
+
+    async with Client(config=config) as client:
+        await client.login("[EMAIL_REDACTED]", "pass", network="rockradio")
+        assert client.has_session("rockradio")
+        assert not client.has_session("di")
+        assert client.listen_key == auth_payload["member"]["listen_key"]
+        # credentials are stored so ensure_session can mint other networks
+        await client.ensure_session("di")
+        assert client.has_session("di")
+    assert mock_login.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_set_session_restores_keys(config, patch_transport):
+    async with Client(config=config) as client:
+        client.set_session("rockradio", "rr-key", listen_key="lk")
+        client.set_session("di", "di-key")
+        assert client.has_session("rockradio")
+        assert client.session_key == "di-key"
+        assert client.listen_key == "lk"
+
+
+@pytest.mark.asyncio
 async def test_session_key_constructor_sets_header(config, patch_transport):
     async with Client(session_key="preloaded-key", config=config) as client:
         assert client._session_keys.get(config.network) == "preloaded-key"
