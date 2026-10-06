@@ -136,6 +136,10 @@ now = await di.channels.get_currently_playing()
 url = di.channels.get_stream_url("trance", "your-listen-key", quality="hi")
 stream_url = await di.channels.resolve_stream_url(url)
 
+# Set this client's listen key on any track/stream URL (fills the bare
+# `?listen_key` placeholder, replaces a stale key)
+playable = client.with_listen_key(track.url)
+
 # Favorites
 await di.channels.add_favorite(user_id, channel_id)
 favs = await di.channels.get_favorites(user_id)

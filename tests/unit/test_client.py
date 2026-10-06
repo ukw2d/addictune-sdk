@@ -119,6 +119,37 @@ async def test_listen_key_constructor(config, patch_transport):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        (
+            "https://prem2.di.fm/track_128k.mp3?listen_key",
+            "https://prem2.di.fm/track_128k.mp3?listen_key=lk",
+        ),
+        (
+            "https://listen.di.fm/premium_high/trance.pls?listen_key=old",
+            "https://listen.di.fm/premium_high/trance.pls?listen_key=lk",
+        ),
+        (
+            "https://cdn.example/a.mp3?size=2&listen_key=old",
+            "https://cdn.example/a.mp3?size=2&listen_key=lk",
+        ),
+        ("https://cdn.example/a.mp3", "https://cdn.example/a.mp3?listen_key=lk"),
+    ],
+)
+async def test_with_listen_key_sets_query_param(config, patch_transport, url, expected):
+    async with Client(listen_key="lk", config=config) as client:
+        assert client.with_listen_key(url) == expected
+
+
+@pytest.mark.asyncio
+async def test_with_listen_key_requires_key(config, patch_transport):
+    async with Client(config=config) as client:
+        with pytest.raises(AddictuneAuthError):
+            client.with_listen_key("https://cdn.example/a.mp3?listen_key")
+
+
+@pytest.mark.asyncio
 async def test_login_failure_raises_auth_error(mocker, config, patch_transport):
     mocker.patch.object(
         AuthAPI,

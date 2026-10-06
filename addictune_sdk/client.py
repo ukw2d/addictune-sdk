@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
 from pydantic import SecretStr
@@ -133,6 +134,22 @@ class Client:
     def listen_key(self) -> str | None:
         """The authenticated user's listen key (for stream URLs), or ``None``."""
         return self._listen_key.get_secret_value() if self._listen_key else None
+
+    def with_listen_key(self, url: str) -> str:
+        """Return *url* with its ``listen_key`` query param set to this client's key.
+
+        Works for track URLs (bare ``?listen_key`` placeholder) and for stream
+        playlist URLs that carry a stale key.
+
+        Raises:
+            AddictuneAuthError: If the client holds no listen key.
+        """
+        if (key := self.listen_key) is None:
+            raise AddictuneAuthError("No listen key; log in or set_session first")
+        parts = urlsplit(url)
+        query = [(k, v) for k, v in parse_qsl(parts.query) if k != "listen_key"]
+        query.append(("listen_key", key))
+        return urlunsplit(parts._replace(query=urlencode(query)))
 
     @property
     def session_key(self) -> str | None:
