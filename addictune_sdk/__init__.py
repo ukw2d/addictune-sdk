@@ -11,7 +11,7 @@ Quick start::
         channels = await di.channels.get_all()
 
 The SDK targets AudioAddict-powered networks including DI.FM, RadioTunes,
-RockRadio, JazzRadio, ClassicalRadio, and ZenRadio.  Each network is
+Rock Radio, Jazz Radio, Classical Radio, and Zen Radio.  Each network is
 accessed through a :class:`NetworkClient` obtained via
 :meth:`Client.network`.
 
@@ -21,78 +21,27 @@ extended with custom :class:`Network` instances passed to the
 :class:`Client` constructor.
 """
 
+from . import models
 from .client import Client
-from .config import AddictuneConfig
+from .config import AddictuneConfig, CircuitConfig, RetryConfig
 from .exceptions import (
     AddictuneAPIError,
     AddictuneAuthError,
     AddictuneError,
     AddictuneNotFoundError,
 )
-from .models import (
-    BUILTIN_NETWORKS,
-    Artist,
-    AuthResponse,
-    Channel,
-    ChannelArtist,
-    ChannelTracklist,
-    ContentAsset,
-    ImageSet,
-    LikedChannelID,
-    LikedTrack,
-    MixShow,
-    Network,
-    NowPlaying,
-    Playlist,
-    PlaylistProgress,
-    PlaylistTag,
-    PlaylistTracks,
-    SearchBucket,
-    SearchResults,
-    ShowChannel,
-    ShowEpisode,
-    SimilarChannel,
-    SkipEvent,
-    Track,
-    TrackHistoryEntry,
-    UpcomingEvent,
-    Votes,
-)
+from .models import *
 from .network_client import NetworkClient
 
 __all__ = [
-    "Client",
+    "AddictuneAPIError",
+    "AddictuneAuthError",
     "AddictuneConfig",
     "AddictuneError",
-    "AddictuneAuthError",
     "AddictuneNotFoundError",
-    "AddictuneAPIError",
-    "Artist",
-    "AuthResponse",
-    "BUILTIN_NETWORKS",
-    "Channel",
-    "ChannelArtist",
-    "ChannelTracklist",
-    "ContentAsset",
-    "ImageSet",
-    "LikedChannelID",
-    "LikedTrack",
-    "MixShow",
-    "Network",
+    "CircuitConfig",
+    "Client",
     "NetworkClient",
-    "NowPlaying",
-    "Playlist",
-    "PlaylistProgress",
-    "PlaylistTag",
-    "PlaylistTracks",
-    "SearchBucket",
-    "SearchResults",
-    "ShowChannel",
-    "ShowEpisode",
-    "SimilarChannel",
-    "SkipEvent",
-    "Track",
-    "TrackHistoryEntry",
-    "UpcomingEvent",
-    "Votes",
+    "RetryConfig",
 ]
+__all__ += models.__all__

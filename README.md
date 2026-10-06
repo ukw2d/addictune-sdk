@@ -4,7 +4,7 @@
 
 **Async Python SDK for the AudioAddict radio platform**
 
-DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
+DI.FM · RadioTunes · Rock Radio · Jazz Radio · Classical Radio · Zen Radio
 
 [![PyPI version](https://img.shields.io/pypi/v/addictune-sdk?label=PyPI&color=blue)](https://pypi.org/project/addictune-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/addictune-sdk?label=Python&logo=python&logoColor=white)](https://pypi.org/project/addictune-sdk/)
@@ -18,23 +18,23 @@ DI.FM · RadioTunes · RockRadio · JazzRadio · ClassicalRadio · ZenRadio
 ## Features
 
 - **Fully async** — built on `httpx` with `async/await` throughout
-- **6 networks** — DI.FM, RadioTunes, RockRadio, JazzRadio, ClassicalRadio, ZenRadio out of the box
+- **6 networks** — DI.FM, RadioTunes, Rock Radio, Jazz Radio, Classical Radio, Zen Radio out of the box
 - **Typed models** — Pydantic v2 models for every API response, with IDE autocomplete and validation
 - **ETag caching** — automatic HTTP `If-None-Match` / `304` handling backed by SQLite
 - **Auto-pagination** — `async for` iterators that transparently walk pages
 - **Resilient transport** — retry with exponential backoff + jitter, circuit breaker
-- **Auth helpers** — session and direct login, `SecretStr`-guarded internal storage
-- **Minimal dependencies** — only `httpx` and `pydantic`
-- **Zero-config** — sensible defaults, override via constructor, JSON file, or auto-discovery
+- **Auth helpers** — per-network sessions, `SecretStr`-guarded internal storage
+- **Minimal dependencies** — `httpx`, `pydantic` and `platformdirs`
+- **Zero-config** — sensible defaults, override via the `AddictuneConfig` constructor
 
 ### API coverage
 
 | Domain       | What you can do                                                                  |
 |--------------|----------------------------------------------------------------------------------|
-| **Auth**     | Login (session or direct), retrieve API key + listen key                         |
+| **Auth**     | Per-network login, restore sessions, retrieve API key + listen key               |
 | **Channels** | Browse all channels, get by ID, track history, now playing, stream URLs, favorites |
-| **Tracks**   | Get by ID, liked tracks, vote up/down/delete, skip events, audio quality prefs   |
-| **Playlists**| Featured playlists, browse by popularity/newest, get tracks, follow, listen history |
+| **Tracks**   | Get by ID, liked tracks, vote up/down/delete, skip events                        |
+| **Playlists**| Browse by popularity/newest, get tracks, followed playlists, record listen history |
 | **Mix Shows**| Browse shows, iterate episodes, upcoming events, follow/unfollow shows           |
 | **Search**   | Search channels, shows, playlists, and tracks within a network                  |
 
@@ -389,7 +389,7 @@ sdk_logger.addHandler(handler)
 | Component | `DEBUG` | `INFO` | `WARNING` | `ERROR` |
 |-----------|---------|--------|-----------|---------|
 | **Transport** (retry / circuit breaker) | Each retry attempt with wait time | Retry succeeded; circuit recovered | Circuit tripped open; request rejected by circuit | All attempts exhausted |
-| **Cache** (ETag / SQLite) | Cache hit, miss, expired, stored, indexed | — | — | — |
+| **Cache** (ETag / SQLite) | Cache hit, miss, expired, stored | — | — | — |
 | **Client** | Init, connection close | Successful login | — | — |
 
 **Recommended levels:**
@@ -397,6 +397,12 @@ sdk_logger.addHandler(handler)
 - **Production:** `WARNING` (default) — only circuit-breaker trips and exhausted retries
 - **Development:** `INFO` — adds login events and retry recoveries
 - **Debugging:** `DEBUG` — full visibility into cache behaviour and every retry attempt
+
+---
+
+## Versioning
+
+Semantic versioning. While the SDK is below 1.0, breaking changes bump the minor version (`0.3` → `0.4`) and are listed in the GitHub release notes; patch releases are backwards compatible. Pin accordingly, e.g. `addictune-sdk>=0.4,<0.5`.
 
 ---
 
