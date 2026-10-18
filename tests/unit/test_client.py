@@ -67,6 +67,20 @@ async def test_login_sets_listen_key(mocker, config, patch_transport, auth_paylo
 
 
 @pytest.mark.asyncio
+async def test_login_remembers_the_subscription_tier(
+    mocker, config, patch_transport, auth_payload
+):
+    auth_payload["member"]["subscriptions"] = [{"status": "active"}]
+    auth = AuthResponse.model_validate(auth_payload)
+    mocker.patch.object(AuthAPI, "login", return_value=auth)
+
+    async with Client(config=config) as client:
+        assert client.premium is None
+        await client.login("[EMAIL_REDACTED]", "pw")
+        assert client.premium is True
+
+
+@pytest.mark.asyncio
 async def test_login_sets_session_key_property(
     mocker, config, patch_transport, auth_payload
 ):

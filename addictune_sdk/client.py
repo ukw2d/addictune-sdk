@@ -70,6 +70,7 @@ class Client:
         self._listen_key: SecretStr | None = (
             SecretStr(listen_key) if listen_key else None
         )
+        self._premium: bool | None = None
 
         if session_key:
             self._session_keys[self._config.network] = session_key
@@ -135,6 +136,11 @@ class Client:
         """The authenticated user's listen key (for stream URLs), or ``None``."""
         return self._listen_key.get_secret_value() if self._listen_key else None
 
+    @property
+    def premium(self) -> bool | None:
+        """Whether the account holds an active subscription; ``None`` until login."""
+        return self._premium
+
     def with_listen_key(self, url: str) -> str:
         """Return *url* with its ``listen_key`` query param set to this client's key.
 
@@ -177,6 +183,7 @@ class Client:
         slug = network or self._config.network
         self._credentials = (email, password)
         auth = await self.network(slug).auth.login(email, password)
+        self._premium = auth.premium
         self.set_session(
             slug,
             auth.api_key.get_secret_value(),
