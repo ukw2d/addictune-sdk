@@ -89,6 +89,8 @@ from addictune_sdk import Client
 async with Client() as client:
     auth = await client.login("you@example.com", "your-password")
     print(f"Logged in as user {auth.user_id}")
+    if auth.premium is False:
+        print("Free account: premium streams will be refused")
 ```
 
 Or pass a pre-existing session key:
