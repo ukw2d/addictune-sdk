@@ -25,6 +25,10 @@ class AddictuneAPIError(AddictuneError):
         super().__init__(f"HTTP {status_code}: {message}")
 
 
+class AddictuneAppAuthError(AddictuneAPIError):
+    """Application HTTP Basic authentication was rejected during login."""
+
+
 async def raise_for_status(response: httpx.Response) -> None:
     """Raise a typed SDK exception for non-success responses."""
     if response.is_success or response.status_code == 304:

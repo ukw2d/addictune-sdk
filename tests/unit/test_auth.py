@@ -5,7 +5,8 @@ import httpx
 import pytest
 
 from addictune_sdk.api.auth import AuthAPI, _APP_AUTH
-from addictune_sdk.exceptions import AddictuneAuthError
+from addictune_sdk import AddictuneAppAuthError
+from addictune_sdk.exceptions import AddictuneAPIError, AddictuneAuthError
 from addictune_sdk.models.auth import AuthResponse
 from tests.conftest import make_response
 
@@ -63,6 +64,39 @@ async def test_login_uses_network_in_url(mocker, auth_response):
     await api.login("user@example.com", "pass")
 
     assert mock_client.post.call_args[0][0] == "/rockradio/member_sessions"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("challenge", [
+    'Basic realm="AudioAddict Radio Platform API"',
+    'bAsIc realm="radio"',
+    'Bearer realm="quoted, Basic not-a-scheme", Basic realm="radio"',
+])
+async def test_login_basic_challenge_is_application_error(mocker, challenge):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.post.return_value = make_response(
+        401, text="upstream secret", headers={"WWW-Authenticate": challenge}
+    )
+    with pytest.raises(AddictuneAppAuthError) as result:
+        await AuthAPI(mock_client).login("test@example.invalid", "pw")
+    assert isinstance(result.value, AddictuneAPIError)
+    assert result.value.status_code == 401
+    assert "upstream secret" not in str(result.value)
+    assert not isinstance(result.value, AddictuneAuthError)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("challenge", [
+    "", 'Bearer realm="Basic"', 'Digest realm="a, Basic b"',
+    'Digest realm=radio, basic = extension',
+])
+async def test_login_non_basic_challenge_remains_auth_error(mocker, challenge):
+    mock_client = mocker.AsyncMock(spec=httpx.AsyncClient)
+    mock_client.post.return_value = make_response(
+        401, text="Invalid credentials", headers={"WWW-Authenticate": challenge}
+    )
+    with pytest.raises(AddictuneAuthError):
+        await AuthAPI(mock_client).login("test@example.invalid", "pw")
 
 
 @pytest.mark.asyncio

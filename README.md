@@ -93,6 +93,12 @@ async with Client() as client:
         print("Free account: premium streams will be refused")
 ```
 
+If `member_sessions` responds with a 401 HTTP Basic challenge, login raises
+`AddictuneAppAuthError` (an `AddictuneAPIError` with `status_code == 401`).
+This indicates application authentication was rejected; it does not validate
+or invalidate the account password. Ordinary credential failures still raise
+`AddictuneAuthError`.
+
 Or pass a pre-existing session key:
 
 ```python

@@ -1,6 +1,9 @@
+import re
+from urllib.request import parse_http_list
+
 import httpx
 
-from ..exceptions import AddictuneAuthError, raise_for_status
+from ..exceptions import AddictuneAppAuthError, AddictuneAuthError, raise_for_status
 from ..models.auth import AuthResponse
 
 # Undocumented mobile-app identity; the previous streams identity is rejected.
@@ -33,6 +36,12 @@ class AuthAPI:
             json={"member_session": {"username": email, "password": password}},
             auth=_APP_AUTH,
         )
+        if response.status_code == 401 and any(
+            re.match(r"^\s*basic(?!\s*=)(?:\s|$)", item, re.IGNORECASE) is not None
+            for item in parse_http_list(response.headers.get("www-authenticate", ""))
+            if item.strip()
+        ):
+            raise AddictuneAppAuthError(401, "Application authentication rejected")
         if response.status_code == 422:  # API answers 422 for a bad username/password
             raise AddictuneAuthError(response.text.strip() or response.reason_phrase)
         await raise_for_status(response)

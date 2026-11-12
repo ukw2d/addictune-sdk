@@ -26,6 +26,7 @@ from .client import Client
 from .config import AddictuneConfig, CircuitConfig, RetryConfig
 from .exceptions import (
     AddictuneAPIError,
+    AddictuneAppAuthError,
     AddictuneAuthError,
     AddictuneError,
     AddictuneNotFoundError,
@@ -35,6 +36,7 @@ from .network_client import NetworkClient
 
 __all__ = [
     "AddictuneAPIError",
+    "AddictuneAppAuthError",
     "AddictuneAuthError",
     "AddictuneConfig",
     "AddictuneError",
