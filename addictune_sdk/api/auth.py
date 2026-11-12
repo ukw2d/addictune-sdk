@@ -3,7 +3,8 @@ import httpx
 from ..exceptions import AddictuneAuthError, raise_for_status
 from ..models.auth import AuthResponse
 
-_APP_AUTH = httpx.BasicAuth("streams", "diradio")
+# Undocumented mobile-app identity; the previous streams identity is rejected.
+_APP_AUTH = httpx.BasicAuth("ephemeron", "dayeiph0ne@pp")
 
 
 class AuthAPI:
